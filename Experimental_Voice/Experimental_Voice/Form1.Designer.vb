@@ -1,5 +1,5 @@
 ﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()> _
-Partial Class Form1
+Partial Class frmMonitor
     Inherits System.Windows.Forms.Form
 
     'Form overrides dispose to clean up the component list.
@@ -22,9 +22,29 @@ Partial Class Form1
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
-        components = New System.ComponentModel.Container()
+        Me.txtOut = New System.Windows.Forms.TextBox
+        Me.SuspendLayout()
+        '
+        'txtOut
+        '
+        Me.txtOut.Location = New System.Drawing.Point(13, 13)
+        Me.txtOut.Multiline = True
+        Me.txtOut.Name = "txtOut"
+        Me.txtOut.Size = New System.Drawing.Size(353, 221)
+        Me.txtOut.TabIndex = 0
+        '
+        'frmMonitor
+        '
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.Text = "Form1"
+        Me.ClientSize = New System.Drawing.Size(378, 313)
+        Me.Controls.Add(Me.txtOut)
+        Me.Name = "frmMonitor"
+        Me.Text = "Monitor"
+        Me.ResumeLayout(False)
+        Me.PerformLayout()
+
     End Sub
+    Friend WithEvents txtOut As System.Windows.Forms.TextBox
 
 End Class
