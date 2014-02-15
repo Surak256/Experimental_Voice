@@ -20,6 +20,11 @@
 
     Public Sub frmMonitor_Load(ByVal sender As Object, ByVal e As EventArgs) Handles Me.Load
         mySpeech.LoadSpeech()
+        mySpeech.addCommand("end program", New x32.CommandHandler(AddressOf EndProgram))
+    End Sub
+
+    Public Sub EndProgram()
+        Application.Exit()
     End Sub
 
 End Class

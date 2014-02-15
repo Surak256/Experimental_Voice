@@ -30,6 +30,7 @@ Partial Class frmMonitor
         Me.txtOut.Location = New System.Drawing.Point(13, 13)
         Me.txtOut.Multiline = True
         Me.txtOut.Name = "txtOut"
+        Me.txtOut.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
         Me.txtOut.Size = New System.Drawing.Size(353, 221)
         Me.txtOut.TabIndex = 0
         '
