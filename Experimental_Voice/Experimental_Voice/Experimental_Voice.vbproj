@@ -59,6 +59,7 @@
     <Import Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="SpeechCommand.vb" />
     <Compile Include="Form1.vb">
       <SubType>Form</SubType>
     </Compile>

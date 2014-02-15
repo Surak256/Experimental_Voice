@@ -8,7 +8,7 @@ Namespace x32
         Private monitor As frmMonitor
 
         'Functional variables
-        Private _commandMap As New Dictionary(Of String, [Delegate])
+        Private _commandMap As New Dictionary(Of Integer, SpeechCommand)
 
         Private speechEngine As SpInprocRecognizer
         Private listener As SpInProcRecoContext
@@ -16,6 +16,7 @@ Namespace x32
         Private grammar As ISpeechRecoGrammar
 
         Private commandListPtr As IntPtr
+        Private i As Integer = 2
 
         Public Sub New(ByVal monitor As frmMonitor)
             Me.monitor = monitor
@@ -48,18 +49,15 @@ Namespace x32
                 'Interim state
                 Dim hStateMain2 As IntPtr
                 builder.CreateNewState(hStateMain, hStateMain2)
-                'Init rule (ex. "Computer")
-                Dim hStateInit As IntPtr
-                builder.GetRule("Init", 1, 0, True, hStateInit)
-                builder.AddRuleTransition(hStateMain, hStateMain2, hStateInit, 1, Nothing)
-                builder.AddWordTransition(hStateInit, Nothing, "Computer,", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
-                'Main command rule4
-                Dim hStateCommand As IntPtr
-                builder.GetRule("Command", 2, SpeechLib.SpeechRuleAttributes.SRADynamic, True, hStateCommand)
-                builder.AddRuleTransition(hStateMain2, Nothing, hStateCommand, 1, Nothing)
-                builder.AddWordTransition(hStateCommand, Nothing, "deactivate", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
-                builder.AddWordTransition(hStateCommand, Nothing, "log off", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
-                commandListPtr = hStateCommand
+                'Add word transition for init command ("Computer")
+                builder.AddWordTransition(hStateMain, hStateMain2, "Computer,", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                commandListPtr = hStateMain2
+                'Cancel command
+                'Required to have a full path to Nothing
+                Dim hStateCancel As IntPtr
+                builder.GetRule("Cancel", 1, 0, True, hStateCancel)
+                builder.AddRuleTransition(hStateMain2, Nothing, hStateCancel, 1, Nothing)
+                builder.AddWordTransition(hStateCancel, Nothing, "cancel", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
                 'Commit and set active
                 monitor.writeLine("Committing changes")
                 builder.Commit(0)
@@ -79,9 +77,24 @@ Namespace x32
         ''' <param name="command">Sub to be run when the command is spoken</param>
         ''' <remarks></remarks>
         Public Sub addCommand(ByVal commandName As String, ByRef command As CommandHandler)
-            _commandMap.Add(commandName, command)
-            builder.AddWordTransition(commandListPtr, Nothing, commandName, " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
-            builder.Commit(0)
+            monitor.writeLine("Adding command: " & commandName)
+            Try
+                Dim myCommand As SpeechCommand
+                myCommand.Name = commandName
+                myCommand.ID = i
+                i += 1 'Increment the id for the next command
+                myCommand.Command = command
+                _commandMap.Add(myCommand.ID, myCommand)
+                Dim hStateNewCommand As IntPtr
+                builder.GetRule(commandName, myCommand.ID, SpeechLib.SpeechRuleAttributes.SRADynamic, True, hStateNewCommand)
+                builder.AddRuleTransition(commandListPtr, Nothing, hStateNewCommand, 1, Nothing)
+                builder.AddWordTransition(hStateNewCommand, Nothing, commandName, " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                builder.Commit(0)
+            Catch ex As Exception
+                monitor.writeLine("Critical error adding command:")
+                monitor.writeLine(ex.ToString())
+                monitor.writeLine(ex.StackTrace)
+            End Try
         End Sub
 
         Private Sub onRecognition(ByVal StreamNumber As Integer, ByVal StreamPosition As Object, ByVal RecognitionType As SpeechRecognitionType, ByVal Result As ISpeechRecoResult)
@@ -93,8 +106,8 @@ Namespace x32
                     monitor.writeLine(" Child rule: " & Result.PhraseInfo.Rule.Children.Item(x).Name)
                 Next
             End If
-            If _commandMap.ContainsKey(Result.PhraseInfo.Elements.Item(1).DisplayText) Then
-                _commandMap.Item(Result.PhraseInfo.Elements.Item(1).DisplayText).DynamicInvoke()
+            If _commandMap.ContainsKey(Result.PhraseInfo.Rule.Children.Item(0).Id) Then
+                _commandMap.Item(Result.PhraseInfo.Rule.Children.Item(0).Id).Command.Invoke()
             End If
         End Sub
     End Class

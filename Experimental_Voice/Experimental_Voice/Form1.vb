@@ -21,10 +21,20 @@
     Public Sub frmMonitor_Load(ByVal sender As Object, ByVal e As EventArgs) Handles Me.Load
         mySpeech.LoadSpeech()
         mySpeech.addCommand("end program", New x32.CommandHandler(AddressOf EndProgram))
+        mySpeech.addCommand("maximize window", New x32.CommandHandler(AddressOf Maximise))
+        mySpeech.addCommand("restore window", New x32.CommandHandler(AddressOf Restore))
     End Sub
 
     Public Sub EndProgram()
         Application.Exit()
+    End Sub
+
+    Public Sub Maximise()
+        Me.WindowState = FormWindowState.Maximized
+    End Sub
+
+    Public Sub Restore()
+        Me.WindowState = FormWindowState.Normal
     End Sub
 
 End Class
