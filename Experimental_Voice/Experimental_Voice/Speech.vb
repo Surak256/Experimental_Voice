@@ -97,6 +97,18 @@ Namespace x32
             End Try
         End Sub
 
+
+        Public Sub removeCommand(ByVal Name As String)
+            If Name = "Main" Then
+                monitor.writeLine("Cannot remove root command")
+            Else
+                Dim hStateRemoved As IntPtr
+                'Creates rule if it doesn't exist, otherwise returns current rule
+                builder.GetRule(Name, 0, 0, True, hStateRemoved)
+                builder.ClearRule(hStateRemoved)
+                builder.Commit(0)
+            End If
+        End Sub
         Private Sub onRecognition(ByVal StreamNumber As Integer, ByVal StreamPosition As Object, ByVal RecognitionType As SpeechRecognitionType, ByVal Result As ISpeechRecoResult)
             monitor.writeLine("Recognized: " & Result.PhraseInfo.GetText())
             monitor.writeLine("    Rule name: " & Result.PhraseInfo.Rule.Name)
