@@ -3,12 +3,14 @@
 Namespace x32
     Public Delegate Sub CommandHandler()
 
+    Public Delegate Sub ComplexCommandHandler(ByVal result As ISpeechPhraseInfo)
+
     Public Class Speech
         'Debug variables
         Private monitor As frmMonitor
 
         'Functional variables
-        Private _commandMap As New Dictionary(Of Integer, SpeechCommand)
+        Private _commandMap As New Dictionary(Of Integer, ComplexSpeechCommand)
 
         Private speechEngine As SpInprocRecognizer
         Private listener As SpInProcRecoContext
@@ -52,12 +54,9 @@ Namespace x32
                 'Add word transition for init command ("Computer")
                 builder.AddWordTransition(hStateMain, hStateMain2, "Computer,", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
                 commandListPtr = hStateMain2
-                'Cancel command
+                'Epsilon transition
                 'Required to have a full path to Nothing
-                Dim hStateCancel As IntPtr
-                builder.GetRule("Cancel", 1, 0, True, hStateCancel)
-                builder.AddRuleTransition(hStateMain2, Nothing, hStateCancel, 1, Nothing)
-                builder.AddWordTransition(hStateCancel, Nothing, "cancel", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                builder.AddWordTransition(hStateMain2, Nothing, Nothing, Nothing, SPGRAMMARWORDTYPE.SPWT_LEXICAL, Nothing, Nothing)
                 'Commit and set active
                 monitor.writeLine("Committing changes")
                 builder.Commit(0)
@@ -76,14 +75,11 @@ Namespace x32
         ''' <param name="commandName">Command to be spoken</param>
         ''' <param name="command">Sub to be run when the command is spoken</param>
         ''' <remarks></remarks>
-        Public Sub addCommand(ByVal commandName As String, ByRef command As CommandHandler)
+        Public Sub addCommand(ByVal CommandName As String, ByRef Command As CommandHandler)
             monitor.writeLine("Adding command: " & commandName)
             Try
-                Dim myCommand As SpeechCommand
-                myCommand.Name = commandName
-                myCommand.ID = i
+                Dim myCommand As New SimpleSpeechCommand(commandName, i, command)
                 i += 1 'Increment the id for the next command
-                myCommand.Command = command
                 _commandMap.Add(myCommand.ID, myCommand)
                 Dim hStateNewCommand As IntPtr
                 builder.GetRule(commandName, myCommand.ID, SpeechLib.SpeechRuleAttributes.SRADynamic, True, hStateNewCommand)
@@ -97,11 +93,31 @@ Namespace x32
             End Try
         End Sub
 
+        Public Sub addCommand(ByVal Name As String, ByVal Command As ComplexCommandHandler, ByVal Text As String)
+            monitor.writeLine("Adding complex command: " & name)
+            monitor.writeLine("    Command text: " & Text)
+            Try
+                Dim myCommand As New ComplexSpeechCommand(Name, i, Text, Command)
+                i += 1
+                _commandMap.Add(myCommand.ID, myCommand)
+                Dim hStateNewCommand As IntPtr
+                builder.GetRule(Name, myCommand.ID, SpeechRuleAttributes.SRADynamic, True, hStateNewCommand)
+                builder.AddRuleTransition(commandListPtr, Nothing, hStateNewCommand, 1, Nothing)
+                'ToDo: Add handling for truly complex commands
+                builder.AddWordTransition(hStateNewCommand, Nothing, Text, " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                builder.Commit(0)
+            Catch ex As Exception
+                monitor.writeLine("Critical error adding command:")
+                monitor.writeLine(ex.ToString())
+                monitor.writeLine(ex.StackTrace)
+            End Try
+        End Sub
 
         Public Sub removeCommand(ByVal Name As String)
-            If Name = "Main" Then
+            If Name.ToLower() = "main" Then
                 monitor.writeLine("Cannot remove root command")
             Else
+                monitor.writeLine("Removing command: " & Name)
                 Dim hStateRemoved As IntPtr
                 'Creates rule if it doesn't exist, otherwise returns current rule
                 builder.GetRule(Name, 0, 0, True, hStateRemoved)
@@ -109,6 +125,7 @@ Namespace x32
                 builder.Commit(0)
             End If
         End Sub
+
         Private Sub onRecognition(ByVal StreamNumber As Integer, ByVal StreamPosition As Object, ByVal RecognitionType As SpeechRecognitionType, ByVal Result As ISpeechRecoResult)
             monitor.writeLine("Recognized: " & Result.PhraseInfo.GetText())
             monitor.writeLine("    Rule name: " & Result.PhraseInfo.Rule.Name)
@@ -117,10 +134,14 @@ Namespace x32
                 For x As Integer = 0 To Result.PhraseInfo.Rule.Children.Count - 1
                     monitor.writeLine(" Child rule: " & Result.PhraseInfo.Rule.Children.Item(x).Name)
                 Next
+                If _commandMap.ContainsKey(Result.PhraseInfo.Rule.Children.Item(0).Id) Then
+                    _commandMap.Item(Result.PhraseInfo.Rule.Children.Item(0).Id).executeCommand(Result.PhraseInfo)
+                End If
+            Else
+                monitor.writeLine("Epsilon transition used.")
+                monitor.writeLine("You do not need to pause for recognition.")
             End If
-            If _commandMap.ContainsKey(Result.PhraseInfo.Rule.Children.Item(0).Id) Then
-                _commandMap.Item(Result.PhraseInfo.Rule.Children.Item(0).Id).Command.Invoke()
-            End If
+
         End Sub
     End Class
 End Namespace

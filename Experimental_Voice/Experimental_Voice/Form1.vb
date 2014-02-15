@@ -25,6 +25,8 @@
         mySpeech.addCommand("restore window", New x32.CommandHandler(AddressOf Restore))
     End Sub
 
+
+
     Public Sub EndProgram()
         Application.Exit()
     End Sub
@@ -37,4 +39,18 @@
         Me.WindowState = FormWindowState.Normal
     End Sub
 
+    Public Sub DisplayMessage(ByVal phrase As SpeechLib.ISpeechPhraseInfo)
+        MsgBox(phrase.Rule.Children.Item(0).Name)
+    End Sub
+
+    Private Sub btnNewCommand_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnNewCommand.Click
+        Dim name As String = InputBox("Input a command to be spoken.")
+        'Dim message As String = InputBox("Input a message to display when this command is executed")
+        mySpeech.addCommand(name, New x32.ComplexCommandHandler(AddressOf DisplayMessage), name)
+    End Sub
+
+    Private Sub btnRemove_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnRemove.Click
+        Dim name As String = InputBox("Name of command to be removed.")
+        mySpeech.removeCommand(name)
+    End Sub
 End Class
