@@ -18,6 +18,9 @@ Namespace x32
         Private grammar As ISpeechRecoGrammar
 
         Private commandListPtr As IntPtr
+        Private hStateDigit As IntPtr
+        Private hStateGreekLetter
+
         Private i As Integer = 3
 
         Public Sub New(ByVal monitor As frmMonitor)
@@ -58,7 +61,6 @@ Namespace x32
                 'Required to have a full path to Nothing
                 builder.AddWordTransition(hStateMain2, Nothing, Nothing, Nothing, SPGRAMMARWORDTYPE.SPWT_LEXICAL, Nothing, Nothing)
                 'Utility rule for numbers
-                Dim hStateDigit As IntPtr
                 builder.GetRule("Digit", 1, SpeechRuleAttributes.SRADynamic, True, hStateDigit)
                 builder.AddWordTransition(hStateDigit, Nothing, "zero", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
                 builder.AddWordTransition(hStateDigit, Nothing, "one", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
@@ -71,32 +73,31 @@ Namespace x32
                 builder.AddWordTransition(hStateDigit, Nothing, "eight", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
                 builder.AddWordTransition(hStateDigit, Nothing, "nine", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
                 'Utility rule for Greek Letters
-                Dim hStateLetter As IntPtr
-                builder.GetRule("Greek Letter", 2, SpeechRuleAttributes.SRADynamic, True, hStateLetter)
-                builder.AddWordTransition(hStateLetter, Nothing, "alpha", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
-                builder.AddWordTransition(hStateLetter, Nothing, "beta", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
-                builder.AddWordTransition(hStateLetter, Nothing, "gamma", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
-                builder.AddWordTransition(hStateLetter, Nothing, "delta", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
-                builder.AddWordTransition(hStateLetter, Nothing, "epsilon", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
-                builder.AddWordTransition(hStateLetter, Nothing, "zeta", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
-                builder.AddWordTransition(hStateLetter, Nothing, "eta", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
-                builder.AddWordTransition(hStateLetter, Nothing, "theta", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
-                builder.AddWordTransition(hStateLetter, Nothing, "iota", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
-                builder.AddWordTransition(hStateLetter, Nothing, "kappa", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
-                builder.AddWordTransition(hStateLetter, Nothing, "lambda", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
-                builder.AddWordTransition(hStateLetter, Nothing, "mu", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
-                builder.AddWordTransition(hStateLetter, Nothing, "nu", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
-                builder.AddWordTransition(hStateLetter, Nothing, "xi", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
-                builder.AddWordTransition(hStateLetter, Nothing, "omicron", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
-                builder.AddWordTransition(hStateLetter, Nothing, "pi", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
-                builder.AddWordTransition(hStateLetter, Nothing, "rho", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
-                builder.AddWordTransition(hStateLetter, Nothing, "sigma", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
-                builder.AddWordTransition(hStateLetter, Nothing, "tau", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
-                builder.AddWordTransition(hStateLetter, Nothing, "upsilon", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
-                builder.AddWordTransition(hStateLetter, Nothing, "phi", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
-                builder.AddWordTransition(hStateLetter, Nothing, "chi", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
-                builder.AddWordTransition(hStateLetter, Nothing, "psi", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
-                builder.AddWordTransition(hStateLetter, Nothing, "omega", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                builder.GetRule("Greek Letter", 2, SpeechRuleAttributes.SRADynamic, True, hStateGreekLetter)
+                builder.AddWordTransition(hStateGreekLetter, Nothing, "alpha", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                builder.AddWordTransition(hStateGreekLetter, Nothing, "beta", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                builder.AddWordTransition(hStateGreekLetter, Nothing, "gamma", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                builder.AddWordTransition(hStateGreekLetter, Nothing, "delta", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                builder.AddWordTransition(hStateGreekLetter, Nothing, "epsilon", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                builder.AddWordTransition(hStateGreekLetter, Nothing, "zeta", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                builder.AddWordTransition(hStateGreekLetter, Nothing, "eta", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                builder.AddWordTransition(hStateGreekLetter, Nothing, "theta", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                builder.AddWordTransition(hStateGreekLetter, Nothing, "iota", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                builder.AddWordTransition(hStateGreekLetter, Nothing, "kappa", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                builder.AddWordTransition(hStateGreekLetter, Nothing, "lambda", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                builder.AddWordTransition(hStateGreekLetter, Nothing, "mu", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                builder.AddWordTransition(hStateGreekLetter, Nothing, "nu", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                builder.AddWordTransition(hStateGreekLetter, Nothing, "xi", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                builder.AddWordTransition(hStateGreekLetter, Nothing, "omicron", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                builder.AddWordTransition(hStateGreekLetter, Nothing, "pi", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                builder.AddWordTransition(hStateGreekLetter, Nothing, "rho", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                builder.AddWordTransition(hStateGreekLetter, Nothing, "sigma", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                builder.AddWordTransition(hStateGreekLetter, Nothing, "tau", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                builder.AddWordTransition(hStateGreekLetter, Nothing, "upsilon", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                builder.AddWordTransition(hStateGreekLetter, Nothing, "phi", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                builder.AddWordTransition(hStateGreekLetter, Nothing, "chi", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                builder.AddWordTransition(hStateGreekLetter, Nothing, "psi", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                builder.AddWordTransition(hStateGreekLetter, Nothing, "omega", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
 
                 'Commit and set active
                 monitor.writeLine("Committing changes")
