@@ -135,6 +135,33 @@ Namespace x32
             End Try
         End Sub
 
+        ''' <summary>
+        ''' Adds a command to the grammar in the format "Computer, [command]"
+        ''' </summary>
+        ''' <param name="CommandName">Command to be spoken</param>
+        ''' <param name="Command">Sub to be run when the command is spoken</param>
+        ''' <remarks>
+        ''' This overload of addCommand supports a complex command handler. Other than that,
+        ''' it functions exactly the same as the overload that accepts a standard command handler.
+        ''' </remarks>
+        Public Sub addCommand(ByVal CommandName As String, ByRef Command As ComplexCommandHandler)
+            monitor.writeLine("Adding command with complex handler: " & CommandName)
+            Try
+                Dim myCommand As New ComplexSpeechCommand(CommandName, i, CommandName, Command)
+                i += 1
+                _commandMap.Add(myCommand.ID, myCommand)
+                Dim hStateNewCommand As IntPtr
+                builder.GetRule(CommandName, myCommand.ID, SpeechLib.SpeechRuleAttributes.SRADynamic, True, hStateNewCommand)
+                builder.AddRuleTransition(commandListPtr, Nothing, hStateNewCommand, 1, Nothing)
+                builder.AddWordTransition(hStateNewCommand, Nothing, CommandName, " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                builder.Commit(0)
+            Catch ex As Exception
+                monitor.writeLine("Critical error adding command:")
+                monitor.writeLine(ex.ToString())
+                monitor.writeLine(ex.StackTrace)
+            End Try
+        End Sub
+
         Public Sub addCommand(ByVal Name As String, ByVal Command As ComplexCommandHandler, ByVal Text As String)
             monitor.writeLine("Adding complex command: " & name)
             monitor.writeLine("    Command text: " & Text)
