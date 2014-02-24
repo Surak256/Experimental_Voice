@@ -37,13 +37,13 @@ Partial Class frmMonitor
         Me.txtOut.Multiline = True
         Me.txtOut.Name = "txtOut"
         Me.txtOut.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
-        Me.txtOut.Size = New System.Drawing.Size(353, 221)
+        Me.txtOut.Size = New System.Drawing.Size(493, 313)
         Me.txtOut.TabIndex = 0
         '
         'btnNewCommand
         '
         Me.btnNewCommand.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
-        Me.btnNewCommand.Location = New System.Drawing.Point(12, 240)
+        Me.btnNewCommand.Location = New System.Drawing.Point(12, 332)
         Me.btnNewCommand.Name = "btnNewCommand"
         Me.btnNewCommand.Size = New System.Drawing.Size(106, 23)
         Me.btnNewCommand.TabIndex = 1
@@ -53,7 +53,7 @@ Partial Class frmMonitor
         'btnRemove
         '
         Me.btnRemove.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
-        Me.btnRemove.Location = New System.Drawing.Point(12, 270)
+        Me.btnRemove.Location = New System.Drawing.Point(12, 362)
         Me.btnRemove.Name = "btnRemove"
         Me.btnRemove.Size = New System.Drawing.Size(106, 23)
         Me.btnRemove.TabIndex = 2
@@ -74,7 +74,8 @@ Partial Class frmMonitor
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(378, 313)
+        Me.ClientSize = New System.Drawing.Size(518, 405)
+        Me.Controls.Add(Me.btnDisplay)
         Me.Controls.Add(Me.btnRemove)
         Me.Controls.Add(Me.btnNewCommand)
         Me.Controls.Add(Me.txtOut)
