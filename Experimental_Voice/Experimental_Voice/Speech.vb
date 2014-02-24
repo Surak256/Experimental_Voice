@@ -185,5 +185,11 @@ Namespace x32
             End If
 
         End Sub
+        Public Sub DisplayGrammar()
+            monitor.writeLine("Rule listing:")
+            For i As Integer = 0 To grammar.Rules.Count - 1
+                monitor.writeLine("    " & grammar.Rules.Item(i).Name)
+            Next
+        End Sub
     End Class
 End Namespace

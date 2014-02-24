@@ -53,4 +53,8 @@
         Dim name As String = InputBox("Name of command to be removed.")
         mySpeech.removeCommand(name)
     End Sub
+
+    Private Sub btnDisplay_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnDisplay.Click
+        mySpeech.DisplayGrammar()
+    End Sub
 End Class

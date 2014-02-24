@@ -25,6 +25,7 @@ Partial Class frmMonitor
         Me.txtOut = New System.Windows.Forms.TextBox
         Me.btnNewCommand = New System.Windows.Forms.Button
         Me.btnRemove = New System.Windows.Forms.Button
+        Me.btnDisplay = New System.Windows.Forms.Button
         Me.SuspendLayout()
         '
         'txtOut
@@ -59,6 +60,16 @@ Partial Class frmMonitor
         Me.btnRemove.Text = "Remove Command"
         Me.btnRemove.UseVisualStyleBackColor = True
         '
+        'btnDisplay
+        '
+        Me.btnDisplay.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnDisplay.Location = New System.Drawing.Point(410, 370)
+        Me.btnDisplay.Name = "btnDisplay"
+        Me.btnDisplay.Size = New System.Drawing.Size(96, 23)
+        Me.btnDisplay.TabIndex = 3
+        Me.btnDisplay.Text = "Display grammar"
+        Me.btnDisplay.UseVisualStyleBackColor = True
+        '
         'frmMonitor
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -76,5 +87,6 @@ Partial Class frmMonitor
     Friend WithEvents txtOut As System.Windows.Forms.TextBox
     Friend WithEvents btnNewCommand As System.Windows.Forms.Button
     Friend WithEvents btnRemove As System.Windows.Forms.Button
+    Friend WithEvents btnDisplay As System.Windows.Forms.Button
 
 End Class
