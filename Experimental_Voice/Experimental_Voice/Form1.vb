@@ -45,8 +45,8 @@
 
     Private Sub btnNewCommand_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnNewCommand.Click
         Dim name As String = InputBox("Input a command to be spoken.")
-        'Dim message As String = InputBox("Input a message to display when this command is executed")
-        mySpeech.addCommand(name, New x32.ComplexCommandHandler(AddressOf DisplayMessage), name)
+        Dim text As String = InputBox("Input the text of the command")
+        mySpeech.addCommand(name, New x32.ComplexCommandHandler(AddressOf DisplayMessage), text)
     End Sub
 
     Private Sub btnRemove_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnRemove.Click

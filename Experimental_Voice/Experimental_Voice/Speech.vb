@@ -61,7 +61,7 @@ Namespace x32
                 'Required to have a full path to Nothing
                 builder.AddWordTransition(hStateMain2, Nothing, Nothing, Nothing, SPGRAMMARWORDTYPE.SPWT_LEXICAL, Nothing, Nothing)
                 'Utility rule for numbers
-                builder.GetRule("Digit", 1, SpeechRuleAttributes.SRADynamic, True, hStateDigit)
+                builder.GetRule("Digit", 1, SpeechRuleAttributes.SRATopLevel, True, hStateDigit)
                 builder.AddWordTransition(hStateDigit, Nothing, "zero", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
                 builder.AddWordTransition(hStateDigit, Nothing, "one", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
                 builder.AddWordTransition(hStateDigit, Nothing, "two", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
@@ -73,7 +73,7 @@ Namespace x32
                 builder.AddWordTransition(hStateDigit, Nothing, "eight", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
                 builder.AddWordTransition(hStateDigit, Nothing, "nine", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
                 'Utility rule for Greek Letters
-                builder.GetRule("Greek Letter", 2, SpeechRuleAttributes.SRADynamic, True, hStateGreekLetter)
+                builder.GetRule("Greek Letter", 2, SpeechRuleAttributes.SRATopLevel, True, hStateGreekLetter)
                 builder.AddWordTransition(hStateGreekLetter, Nothing, "alpha", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
                 builder.AddWordTransition(hStateGreekLetter, Nothing, "beta", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
                 builder.AddWordTransition(hStateGreekLetter, Nothing, "gamma", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
@@ -98,11 +98,12 @@ Namespace x32
                 builder.AddWordTransition(hStateGreekLetter, Nothing, "chi", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
                 builder.AddWordTransition(hStateGreekLetter, Nothing, "psi", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
                 builder.AddWordTransition(hStateGreekLetter, Nothing, "omega", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
-
                 'Commit and set active
                 monitor.writeLine("Committing changes")
                 builder.Commit(0)
                 grammar.CmdSetRuleState("Main", SpeechRuleState.SGDSActive)
+                grammar.CmdSetRuleState("Digit", SpeechRuleState.SGDSInactive)
+                grammar.CmdSetRuleState("Greek Letter", SpeechRuleState.SGDSInactive)
                 monitor.writeLine("Initialization complete. Listening.")
             Catch ex As Exception
                 monitor.writeLine("Critical error:")
@@ -118,7 +119,7 @@ Namespace x32
         ''' <param name="command">Sub to be run when the command is spoken</param>
         ''' <remarks></remarks>
         Public Sub addCommand(ByVal CommandName As String, ByRef Command As CommandHandler)
-            monitor.writeLine("Adding command: " & commandName)
+            monitor.writeLine("Adding simple command: " & CommandName)
             Try
                 Dim myCommand As New SimpleSpeechCommand(commandName, i, command)
                 i += 1 'Increment the id for the next command
@@ -162,8 +163,61 @@ Namespace x32
             End Try
         End Sub
 
+        ''' <summary>
+        ''' Adds a complex command to the grammer.
+        ''' </summary>
+        ''' <param name="Name">Name of the command</param>
+        ''' <param name="Command">Sub to run when the command is spoken</param>
+        ''' <param name="Text">Text of the command</param>
+        ''' <remarks>
+        ''' <para>Complex commands recieve full phrase information when recognized. This information can
+        ''' be ignored by the referenced sub, but will be helpful in determining exactly what
+        ''' action should be taken.</para>
+        ''' 
+        ''' <para>The text of the command is interpreted as follows:</para>
+        ''' 
+        ''' <para>Unmarked text (Not enclosed in brackets of any kind) will be inserted directly in the 
+        ''' rule. Brackets are used to mark nodes that require special processing. Ex: "Hello world!"
+        ''' </para>
+        ''' 
+        ''' <para>A bracket must have an initial character inside it that identifies the form of 
+        ''' special processing it will recieve. Depending on the element's type, other elements 
+        ''' may be nested inside it. The enclosed elements are read immediately after the identifying
+        ''' character. A space should follow the identifying character.</para>
+        ''' 
+        ''' <para>A "L" character indicates the brackets contain a list of pipe-delimited elements
+        ''' that should be treated as interchangeable. This is equivalent to the &lt;L&gt; element
+        ''' in the text XML grammar format. Ex: [L red|green|blue]</para>
+        ''' 
+        ''' <para>A question mark ("?") indicates that the brackets contain an element that is optional.
+        ''' An epsilon transition will be inserted along with the enclosed element to accomplish
+        ''' this. Ex: [? please]</para>
+        ''' 
+        ''' <para>An asterisk ("*") indicates that dictation will be used. The brackets must contain two
+        ''' numbers, the upper and lower bounds for number of words recognized through dictation.
+        ''' Ex: [* 1 4]</para>
+        ''' 
+        ''' <para>A pound sign ("#") indicates that the rule references the digit rule. The brackets must
+        ''' contain two numbers, the upper and lower bounds for digits recognized.
+        ''' Ex: [# 1 3]</para>
+        ''' 
+        ''' <para>A "G" character indicates that the rule references the Greek letters rule. The brackets
+        ''' must contain two numbers, the upper and lower bounds for the number of letters recognized.
+        ''' Ex: [G 0 5]</para>
+        ''' 
+        ''' <para>An "A" character indicates that the rule references the phonetic alphabet rule. The 
+        ''' brackets must contain two numbers, the upper and lower bounds for the number of letters 
+        ''' recognized. Ex: [A 0 9]</para>
+        ''' 
+        ''' <para>These elements can be combined to create highly adaptive rules. The List and Optional
+        ''' elements can contain within them other elements of any type. For example the rule:
+        ''' "Run program [* 1 5] [? in [L normal|maximized|minimized|fullscreen] format]" requires
+        ''' the speaker to specify a program between one and five words long to run, but optionally
+        ''' allows options for how to display that program's window. The handler for this rule would
+        ''' need to be similarly adaptive when interpreting the recognized text.</para>
+        ''' </remarks>
         Public Sub addCommand(ByVal Name As String, ByVal Command As ComplexCommandHandler, ByVal Text As String)
-            monitor.writeLine("Adding complex command: " & name)
+            monitor.writeLine("Adding complex command: " & Name)
             monitor.writeLine("    Command text: " & Text)
             Try
                 Dim myCommand As New ComplexSpeechCommand(Name, i, Text, Command)
@@ -172,14 +226,124 @@ Namespace x32
                 Dim hStateNewCommand As IntPtr
                 builder.GetRule(Name, myCommand.ID, SpeechRuleAttributes.SRADynamic, True, hStateNewCommand)
                 builder.AddRuleTransition(commandListPtr, Nothing, hStateNewCommand, 1, Nothing)
-                'ToDo: Add handling for truly complex commands
-                builder.AddWordTransition(hStateNewCommand, Nothing, Text, " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                ParseCommandText(Text, hStateNewCommand, Nothing)
                 builder.Commit(0)
             Catch ex As Exception
                 monitor.writeLine("Critical error adding command:")
                 monitor.writeLine(ex.ToString())
                 monitor.writeLine(ex.StackTrace)
             End Try
+        End Sub
+
+        Private Sub ParseCommandText(ByVal Text As String, ByRef hStateBefore As IntPtr, ByRef hStateAfter As IntPtr)
+            monitor.writeLine("Parsing command: " & Text)
+            Dim nodes As String() = SeparateIntoNodes(Text)
+            Dim hStates(nodes.Length) As IntPtr
+            hStates(0) = hStateBefore
+            hStates(hStates.Length - 1) = hStateAfter
+            For i As Integer = 1 To hStates.Length - 2
+                builder.CreateNewState(hStateBefore, hStates(i))
+            Next
+            For i As Integer = 0 To nodes.Length - 1
+                monitor.writeLine("Node: " & nodes(i))
+                monitor.Write("Node type: ")
+                If nodes(i).Substring(0, 1) = "[" Then
+                    Select Case nodes(i).Substring(1, 1)
+                        Case "L"
+                            monitor.writeLine("List")
+                            Dim items As String() = nodes(i).Substring(3, nodes(i).Length - 4).Split("|")
+                            For Each item As String In items
+                                monitor.writeLine("    Adding item: " & item)
+                                ParseCommandText(item, hStates(i), hStates(i + 1))
+                            Next
+                        Case "?"
+                            monitor.writeLine("Optional")
+                            builder.AddWordTransition(hStates(i), hStates(i + 1), Nothing, Nothing, SPGRAMMARWORDTYPE.SPWT_LEXICAL, Nothing, Nothing)
+                            ParseCommandText(nodes(i).Substring(3, nodes(i).Length - 4), hStates(i), hStates(i + 1))
+                        Case "*"
+                            monitor.writeLine("Dictation")
+                            Dim min As Integer = nodes(i).Substring(3, nodes(i).Length - 4).Split(" ")(0)
+                            Dim max As Integer = nodes(i).Substring(3, nodes(i).Length - 4).Split(" ")(1)
+                            addMultipleTransition(min, max, hStates(i), hStates(i + 1), SpeechLib.SpeechSpecialTransitionType.SSTTDictation)
+                        Case "#"
+                            monitor.writeLine("Number")
+                            Dim min As Integer = nodes(i).Substring(3, nodes(i).Length - 4).Split(" ")(0)
+                            Dim max As Integer = nodes(i).Substring(3, nodes(i).Length - 4).Split(" ")(1)
+                            addMultipleTransition(min, max, hStates(i), hStates(i + 1), hStateDigit)
+                        Case "G"
+                            monitor.writeLine("Greek Alphabet")
+                            Dim min As Integer = nodes(i).Substring(3, nodes(i).Length - 4).Split(" ")(0)
+                            Dim max As Integer = nodes(i).Substring(3, nodes(i).Length - 4).Split(" ")(1)
+                            addMultipleTransition(min, max, hStates(i), hStates(i + 1), hStateGreekLetter)
+                        Case "A"
+                            monitor.writeLine("Phonetic alphabet")
+                            Dim min As Integer = nodes(i).Substring(3, nodes(i).Length - 4).Split(" ")(0)
+                            Dim max As Integer = nodes(i).Substring(3, nodes(i).Length - 4).Split(" ")(1)
+                            'Add phonetic alphabet rule reference
+                        Case Else
+                            monitor.writeLine("Unknown node type")
+                    End Select
+                Else
+                    monitor.writeLine("Plaintext node")
+                    builder.AddWordTransition(hStates(i), hStates(i + 1), nodes(i), " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                End If
+            Next
+        End Sub
+
+        Public Function SeparateIntoNodes(ByVal Text As String) As String()
+            If Text.Contains("[") Then
+                Dim nodeList As New List(Of String)
+                Dim Start As Integer = 0
+                Dim nodeStack As New Stack(Of Integer)
+                Dim limit As Integer = 0
+                While ((Text.IndexOf("[", Start) <> -1 Or Text.IndexOf("]", Start) <> -1) And limit < 100)
+                    Dim open As Integer = Text.IndexOf("[", Start)
+                    Dim close As Integer = Text.IndexOf("]", Start)
+                    If open < close And open <> -1 Then
+                        'Check for a plaintext node in a top-level node
+                        If open > Start And nodeStack.Count = 0 Then
+                            Dim tryText = Text.Substring(Start, open - Start)
+                            If tryText.Trim().Length > 0 Then
+                                nodeList.Add(tryText.Trim())
+                            End If
+                        End If
+                        nodeStack.Push(open)
+                        Start = open + 1
+                    Else
+                        If nodeStack.Count > 1 Then
+                            nodeStack.Pop()
+                        Else
+                            Dim nodestart = nodeStack.Pop()
+                            nodeList.Add(Text.Substring(nodestart, close - nodestart + 1))
+                        End If
+                        Start = close + 1
+                    End If
+                    limit += 1
+                End While
+                If limit = 100 Then
+                    monitor.writeLine("Limit exceeded. Error while parsing")
+                End If
+                Return nodeList.ToArray()
+            Else 'Simple phrase
+                monitor.writeLine("Simple phrase")
+                Dim ret As String() = {Text}
+                Return ret
+            End If
+        End Function
+
+        Private Sub addMultipleTransition(ByVal min As Integer, ByVal max As Integer, ByRef hStateStart As IntPtr, ByRef hStateEnd As IntPtr, ByVal hStateTransition As IntPtr)
+            Dim hStates(max) As IntPtr
+            hStates(0) = hStateStart
+            hStates(max) = hStateEnd
+            For i As Integer = 1 To max - 1
+                builder.CreateNewState(hStateStart, hStates(i))
+            Next
+            For i As Integer = 0 To max - 1
+                builder.AddRuleTransition(hStates(i), hStates(i + 1), hStateTransition, 1, Nothing)
+                If i > min Then
+                    builder.AddWordTransition(hStates(i), hStates(i + 1), Nothing, Nothing, SPGRAMMARWORDTYPE.SPWT_LEXICAL, Nothing, Nothing)
+                End If
+            Next
         End Sub
 
         Public Sub removeCommand(ByVal Name As String)
