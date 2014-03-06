@@ -59,7 +59,7 @@ Namespace x32
                 commandListPtr = hStateMain2
                 'Epsilon transition
                 'Required to have a full path to Nothing
-                builder.AddWordTransition(hStateMain2, Nothing, Nothing, Nothing, SPGRAMMARWORDTYPE.SPWT_LEXICAL, Nothing, Nothing)
+                builder.AddWordTransition(hStateMain2, Nothing, Nothing, Nothing, SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
                 'Utility rule for numbers
                 builder.GetRule("Digit", 1, SpeechRuleAttributes.SRATopLevel, True, hStateDigit)
                 builder.AddWordTransition(hStateDigit, Nothing, "zero", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
@@ -258,7 +258,7 @@ Namespace x32
                             Next
                         Case "?"
                             monitor.writeLine("Optional")
-                            builder.AddWordTransition(hStates(i), hStates(i + 1), Nothing, Nothing, SPGRAMMARWORDTYPE.SPWT_LEXICAL, Nothing, Nothing)
+                            builder.AddWordTransition(hStates(i), hStates(i + 1), Nothing, Nothing, SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
                             ParseCommandText(nodes(i).Substring(3, nodes(i).Length - 4), hStates(i), hStates(i + 1))
                         Case "*"
                             monitor.writeLine("Dictation")
@@ -341,7 +341,7 @@ Namespace x32
             For i As Integer = 0 To max - 1
                 builder.AddRuleTransition(hStates(i), hStates(i + 1), hStateTransition, 1, Nothing)
                 If i > min Then
-                    builder.AddWordTransition(hStates(i), hStates(i + 1), Nothing, Nothing, SPGRAMMARWORDTYPE.SPWT_LEXICAL, Nothing, Nothing)
+                    builder.AddWordTransition(hStates(i), hStates(i + 1), Nothing, Nothing, SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
                 End If
             Next
         End Sub
