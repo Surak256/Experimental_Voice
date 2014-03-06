@@ -23,6 +23,9 @@ Namespace x32
 
         Private i As Integer = 3
 
+        'Constants
+        Public Const SPRULETRANS_DICTATION As Int32 = -3
+
         Public Sub New(ByVal monitor As frmMonitor)
             Me.monitor = monitor
         End Sub
@@ -264,7 +267,7 @@ Namespace x32
                             monitor.writeLine("Dictation")
                             Dim min As Integer = nodes(i).Substring(3, nodes(i).Length - 4).Split(" ")(0)
                             Dim max As Integer = nodes(i).Substring(3, nodes(i).Length - 4).Split(" ")(1)
-                            addMultipleTransition(min, max, hStates(i), hStates(i + 1), SpeechLib.SpeechSpecialTransitionType.SSTTDictation)
+                            addMultipleTransition(min, max, hStates(i), hStates(i + 1), New IntPtr(SPRULETRANS_DICTATION))
                         Case "#"
                             monitor.writeLine("Number")
                             Dim min As Integer = nodes(i).Substring(3, nodes(i).Length - 4).Split(" ")(0)
