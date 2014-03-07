@@ -40,11 +40,11 @@
     End Sub
 
     Public Sub DisplayMessage(ByVal phrase As SpeechLib.ISpeechPhraseInfo)
-        MsgBox(phrase.Rule.Children.Item(0).Name)
+        MsgBox(phrase.Rule.Children.Item(0).Name & vbNewLine & phrase.GetText())
     End Sub
 
     Private Sub btnNewCommand_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnNewCommand.Click
-        Dim name As String = InputBox("Input a command to be spoken.")
+        Dim name As String = InputBox("Input the command's name. (Must be unique)")
         Dim text As String = InputBox("Input the text of the command")
         mySpeech.addCommand(name, New x32.ComplexCommandHandler(AddressOf DisplayMessage), text)
     End Sub
