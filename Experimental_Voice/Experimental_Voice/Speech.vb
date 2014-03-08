@@ -344,7 +344,7 @@ Namespace x32
             Next
             For i As Integer = 0 To max - 1
                 builder.AddRuleTransition(hStates(i), hStates(i + 1), hStateTransition, 1, Nothing)
-                If i > min Then
+                If i >= min Then
                     builder.AddWordTransition(hStates(i), hStates(i + 1), Nothing, Nothing, SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
                 End If
             Next
