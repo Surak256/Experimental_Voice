@@ -59,10 +59,12 @@ Namespace x32
                 builder.CreateNewState(hStateMain, hStateMain2)
                 'Add word transition for init command ("Computer")
                 builder.AddWordTransition(hStateMain, hStateMain2, "Computer,", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
-                commandListPtr = hStateMain2
+                'Command rule
+                builder.GetRule("Command", 0, SpeechRuleAttributes.SRATopLevel, True, commandListPtr)
+                builder.AddRuleTransition(hStateMain2, Nothing, commandListPtr, 1, Nothing)
                 'Epsilon transition
                 'Required to have a full path to Nothing
-                builder.AddWordTransition(hStateMain2, Nothing, Nothing, Nothing, SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                builder.AddWordTransition(commandListPtr, Nothing, Nothing, Nothing, SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
                 'Utility rule for numbers
                 builder.GetRule("Digit", 1, SpeechRuleAttributes.SRATopLevel, True, hStateDigit)
                 builder.AddWordTransition(hStateDigit, Nothing, "zero", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
@@ -105,6 +107,7 @@ Namespace x32
                 monitor.writeLine("Committing changes")
                 builder.Commit(0)
                 grammar.CmdSetRuleState("Main", SpeechRuleState.SGDSActive)
+                grammar.CmdSetRuleState("Command", SpeechRuleState.SGDSInactive)
                 grammar.CmdSetRuleState("Digit", SpeechRuleState.SGDSInactive)
                 grammar.CmdSetRuleState("Greek Letter", SpeechRuleState.SGDSInactive)
                 monitor.writeLine("Initialization complete. Listening.")
@@ -367,16 +370,16 @@ Namespace x32
             monitor.writeLine("Recognized: " & Result.PhraseInfo.GetText())
             monitor.writeLine("    Rule name: " & Result.PhraseInfo.Rule.Name)
             monitor.writeLine("    Rule ID: " & Result.PhraseInfo.Rule.Id)
-            If Not Result.PhraseInfo.Rule.Children Is Nothing Then
-                For x As Integer = 0 To Result.PhraseInfo.Rule.Children.Count - 1
-                    monitor.writeLine(" Child rule: " & Result.PhraseInfo.Rule.Children.Item(x).Name)
-                Next
-                If _commandMap.ContainsKey(Result.PhraseInfo.Rule.Children.Item(0).Id) Then
-                    _commandMap.Item(Result.PhraseInfo.Rule.Children.Item(0).Id).executeCommand(Result.PhraseInfo)
+            If Result.PhraseInfo.Rule.Name = "Main" Then
+                If Result.PhraseInfo.Rule.Children.Item(0).Children Is Nothing Then
+                    monitor.writeLine("Epsilon transition used" & vbNewLine & _
+                                      "You do not need to pause for recogniton")
+                Else
+                    Dim ruleID As Integer = Result.PhraseInfo.Rule.Children.Item(0).Children.Item(0).Id
+                    If _commandMap.ContainsKey(ruleID) Then
+                        _commandMap.Item(ruleID).executeCommand(Result.PhraseInfo)
+                    End If
                 End If
-            Else
-                monitor.writeLine("Epsilon transition used.")
-                monitor.writeLine("You do not need to pause for recognition.")
             End If
         End Sub
         Public Sub DisplayGrammar()
