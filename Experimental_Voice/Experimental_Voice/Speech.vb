@@ -21,7 +21,7 @@ Namespace x32
         Private hStateDigit As IntPtr
         Private hStateGreekLetter
 
-        Private i As Integer = 3
+        Private index As Integer = 3
 
         'Constants
         Public Const SPRULETRANS_DICTATION As Int32 = -3
@@ -127,8 +127,8 @@ Namespace x32
         Public Sub addCommand(ByVal CommandName As String, ByRef Command As CommandHandler)
             monitor.writeLine("Adding simple command: " & CommandName)
             Try
-                Dim myCommand As New SimpleSpeechCommand(commandName, i, command)
-                i += 1 'Increment the id for the next command
+                Dim myCommand As New SimpleSpeechCommand(commandName, index, command)
+                index += 1 'Increment the id for the next command
                 _commandMap.Add(myCommand.ID, myCommand)
                 Dim hStateNewCommand As IntPtr
                 builder.GetRule(commandName, myCommand.ID, SpeechLib.SpeechRuleAttributes.SRADynamic, True, hStateNewCommand)
@@ -154,8 +154,8 @@ Namespace x32
         Public Sub addCommand(ByVal CommandName As String, ByRef Command As ComplexCommandHandler)
             monitor.writeLine("Adding command with complex handler: " & CommandName)
             Try
-                Dim myCommand As New ComplexSpeechCommand(CommandName, i, CommandName, Command)
-                i += 1
+                Dim myCommand As New ComplexSpeechCommand(CommandName, index, CommandName, Command)
+                index += 1
                 _commandMap.Add(myCommand.ID, myCommand)
                 Dim hStateNewCommand As IntPtr
                 builder.GetRule(CommandName, myCommand.ID, SpeechLib.SpeechRuleAttributes.SRADynamic, True, hStateNewCommand)
@@ -226,8 +226,8 @@ Namespace x32
             monitor.writeLine("Adding complex command: " & Name)
             monitor.writeLine("    Command text: " & Text)
             Try
-                Dim myCommand As New ComplexSpeechCommand(Name, i, Text, Command)
-                i += 1
+                Dim myCommand As New ComplexSpeechCommand(Name, index, Text, Command)
+                index += 1
                 _commandMap.Add(myCommand.ID, myCommand)
                 Dim hStateNewCommand As IntPtr
                 builder.GetRule(Name, myCommand.ID, SpeechRuleAttributes.SRADynamic, True, hStateNewCommand)
