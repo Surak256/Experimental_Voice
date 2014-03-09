@@ -25,8 +25,6 @@
         mySpeech.addCommand("restore window", New x32.CommandHandler(AddressOf Restore))
     End Sub
 
-
-
     Public Sub EndProgram()
         Application.Exit()
     End Sub

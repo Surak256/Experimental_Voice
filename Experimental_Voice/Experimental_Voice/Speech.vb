@@ -10,7 +10,7 @@ Namespace x32
         Private monitor As frmMonitor
 
         'Functional variables
-        Private _commandMap As New Dictionary(Of Integer, ComplexSpeechCommand)
+        Private _commandMap As New Dictionary(Of String, ComplexSpeechCommand)
 
         Private speechEngine As SpInprocRecognizer
         Private listener As SpInProcRecoContext
@@ -19,9 +19,7 @@ Namespace x32
 
         Private commandListPtr As IntPtr
         Private hStateDigit As IntPtr
-        Private hStateGreekLetter
-
-        Private index As Integer = 3
+        Private hStateGreekLetter As IntPtr
 
         'Constants
         Public Const SPRULETRANS_DICTATION As Int32 = -3
@@ -127,11 +125,10 @@ Namespace x32
         Public Sub addCommand(ByVal CommandName As String, ByRef Command As CommandHandler)
             monitor.writeLine("Adding simple command: " & CommandName)
             Try
-                Dim myCommand As New SimpleSpeechCommand(commandName, index, command)
-                index += 1 'Increment the id for the next command
-                _commandMap.Add(myCommand.ID, myCommand)
+                Dim myCommand As New SimpleSpeechCommand(CommandName, Command)
+                _commandMap.Add(myCommand.Name, myCommand)
                 Dim hStateNewCommand As IntPtr
-                builder.GetRule(commandName, myCommand.ID, SpeechLib.SpeechRuleAttributes.SRADynamic, True, hStateNewCommand)
+                builder.GetRule(CommandName, 0, SpeechLib.SpeechRuleAttributes.SRADynamic, True, hStateNewCommand)
                 builder.AddRuleTransition(commandListPtr, Nothing, hStateNewCommand, 1, Nothing)
                 builder.AddWordTransition(hStateNewCommand, Nothing, commandName, " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
                 builder.Commit(0)
@@ -154,11 +151,10 @@ Namespace x32
         Public Sub addCommand(ByVal CommandName As String, ByRef Command As ComplexCommandHandler)
             monitor.writeLine("Adding command with complex handler: " & CommandName)
             Try
-                Dim myCommand As New ComplexSpeechCommand(CommandName, index, CommandName, Command)
-                index += 1
-                _commandMap.Add(myCommand.ID, myCommand)
+                Dim myCommand As New ComplexSpeechCommand(CommandName, CommandName, Command)
+                _commandMap.Add(myCommand.Name, myCommand)
                 Dim hStateNewCommand As IntPtr
-                builder.GetRule(CommandName, myCommand.ID, SpeechLib.SpeechRuleAttributes.SRADynamic, True, hStateNewCommand)
+                builder.GetRule(CommandName, 0, SpeechLib.SpeechRuleAttributes.SRADynamic, True, hStateNewCommand)
                 builder.AddRuleTransition(commandListPtr, Nothing, hStateNewCommand, 1, Nothing)
                 builder.AddWordTransition(hStateNewCommand, Nothing, CommandName, " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
                 builder.Commit(0)
@@ -226,11 +222,10 @@ Namespace x32
             monitor.writeLine("Adding complex command: " & Name)
             monitor.writeLine("    Command text: " & Text)
             Try
-                Dim myCommand As New ComplexSpeechCommand(Name, index, Text, Command)
-                index += 1
-                _commandMap.Add(myCommand.ID, myCommand)
+                Dim myCommand As New ComplexSpeechCommand(Name, Text, Command)
+                _commandMap.Add(myCommand.Name, myCommand)
                 Dim hStateNewCommand As IntPtr
-                builder.GetRule(Name, myCommand.ID, SpeechRuleAttributes.SRADynamic, True, hStateNewCommand)
+                builder.GetRule(Name, 0, SpeechRuleAttributes.SRADynamic, True, hStateNewCommand)
                 builder.AddRuleTransition(commandListPtr, Nothing, hStateNewCommand, 1, Nothing)
                 ParseCommandText(Text, hStateNewCommand, Nothing)
                 builder.Commit(0)
@@ -375,9 +370,9 @@ Namespace x32
                     monitor.writeLine("Epsilon transition used" & vbNewLine & _
                                       "You do not need to pause for recogniton")
                 Else
-                    Dim ruleID As Integer = Result.PhraseInfo.Rule.Children.Item(0).Children.Item(0).Id
-                    If _commandMap.ContainsKey(ruleID) Then
-                        _commandMap.Item(ruleID).executeCommand(Result.PhraseInfo)
+                    Dim ruleName As String = Result.PhraseInfo.Rule.Children.Item(0).Children.Item(0).Name
+                    If _commandMap.ContainsKey(ruleName) Then
+                        _commandMap.Item(ruleName).executeCommand(Result.PhraseInfo)
                     End If
                 End If
             End If
