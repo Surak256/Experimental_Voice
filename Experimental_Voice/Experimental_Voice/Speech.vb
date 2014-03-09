@@ -367,22 +367,17 @@ Namespace x32
             monitor.writeLine("Recognized: " & Result.PhraseInfo.GetText())
             monitor.writeLine("    Rule name: " & Result.PhraseInfo.Rule.Name)
             monitor.writeLine("    Rule ID: " & Result.PhraseInfo.Rule.Id)
-            Try
-                If Result.PhraseInfo.Rule.Children.Count > 0 Then
-                    For x As Integer = 0 To Result.PhraseInfo.Rule.Children.Count - 1
-                        monitor.writeLine(" Child rule: " & Result.PhraseInfo.Rule.Children.Item(x).Name)
-                    Next
-                    If _commandMap.ContainsKey(Result.PhraseInfo.Rule.Children.Item(0).Id) Then
-                        _commandMap.Item(Result.PhraseInfo.Rule.Children.Item(0).Id).executeCommand(Result.PhraseInfo)
-                    End If
-                Else
-                    monitor.writeLine("Epsilon transition used.")
-                    monitor.writeLine("You do not need to pause for recognition.")
+            If Not Result.PhraseInfo.Rule.Children Is Nothing Then
+                For x As Integer = 0 To Result.PhraseInfo.Rule.Children.Count - 1
+                    monitor.writeLine(" Child rule: " & Result.PhraseInfo.Rule.Children.Item(x).Name)
+                Next
+                If _commandMap.ContainsKey(Result.PhraseInfo.Rule.Children.Item(0).Id) Then
+                    _commandMap.Item(Result.PhraseInfo.Rule.Children.Item(0).Id).executeCommand(Result.PhraseInfo)
                 End If
-            Catch ex As Exception
+            Else
                 monitor.writeLine("Epsilon transition used.")
                 monitor.writeLine("You do not need to pause for recognition.")
-            End Try
+            End If
         End Sub
         Public Sub DisplayGrammar()
             monitor.writeLine("Rule listing:")
