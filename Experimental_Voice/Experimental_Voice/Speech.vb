@@ -21,6 +21,9 @@ Namespace x32
         Private hStateDigit As IntPtr
         Private hStateGreekLetter As IntPtr
 
+        'State
+        Private _continuousCommands As Boolean = False
+
         'Constants
         Public Const SPRULETRANS_DICTATION As Int32 = -3
 
@@ -349,15 +352,15 @@ Namespace x32
         End Sub
 
         Public Sub removeCommand(ByVal Name As String)
-            If Name.ToLower() = "main" Then
-                monitor.writeLine("Cannot remove root command")
-            Else
+            If _commandMap.ContainsKey(Name) Then
                 monitor.writeLine("Removing command: " & Name)
                 Dim hStateRemoved As IntPtr
                 'Creates rule if it doesn't exist, otherwise returns current rule
                 builder.GetRule(Name, 0, 0, True, hStateRemoved)
                 builder.ClearRule(hStateRemoved)
                 builder.Commit(0)
+            Else
+                monitor.writeLine("Cannot remove command that is internal or nonexistant.")
             End If
         End Sub
 
@@ -367,10 +370,25 @@ Namespace x32
             monitor.writeLine("    Rule ID: " & Result.PhraseInfo.Rule.Id)
             If Result.PhraseInfo.Rule.Name = "Main" Then
                 If Result.PhraseInfo.Rule.Children.Item(0).Children Is Nothing Then
-                    monitor.writeLine("Epsilon transition used" & vbNewLine & _
-                                      "You do not need to pause for recogniton")
+                    monitor.writeLine("Listening for continuation of command.")
+                    grammar.CmdSetRuleState("Command", SpeechRuleState.SGDSActive)
                 Else
+                    If Not _continuousCommands Then
+                        grammar.CmdSetRuleState("Command", SpeechRuleState.SGDSInactive)
+                    End If
                     Dim ruleName As String = Result.PhraseInfo.Rule.Children.Item(0).Children.Item(0).Name
+                    If _commandMap.ContainsKey(ruleName) Then
+                        _commandMap.Item(ruleName).executeCommand(Result.PhraseInfo)
+                    End If
+                End If
+            ElseIf Result.PhraseInfo.Rule.Name = "Command" Then
+                If Result.PhraseInfo.Rule.Children Is Nothing Then
+                    monitor.writeLine("Something went wrong!")
+                Else
+                    If Not _continuousCommands Then
+                        grammar.CmdSetRuleState("Command", SpeechRuleState.SGDSInactive)
+                    End If
+                    Dim ruleName As String = Result.PhraseInfo.Rule.Children.Item(0).Name
                     If _commandMap.ContainsKey(ruleName) Then
                         _commandMap.Item(ruleName).executeCommand(Result.PhraseInfo)
                     End If
