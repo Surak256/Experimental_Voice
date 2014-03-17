@@ -256,7 +256,13 @@ Namespace x32
             monitor.writeLine("Adding subrule: " & Name)
             monitor.writeLine("    CommandText: " & Text)
             Try
-                Throw New NotImplementedException("Subrules are not implemented yet")
+                Dim myRule As New ComplexSpeechCommand(Name, Text, Nothing)
+                _commandMap.Add(myRule.Name, myRule)
+                Dim hStateNewRule As IntPtr
+                builder.GetRule(Name, 0, SpeechRuleAttributes.SRATopLevel, True, hStateNewRule)
+                ParseCommandText(Text, hStateNewRule, Nothing)
+                builder.Commit(0)
+                grammar.CmdSetRuleState(Name, SpeechRuleState.SGDSInactive)
             Catch ex As Exception
                 monitor.writeLine("Critical error adding rule:")
                 monitor.writeLine(ex.ToString())
