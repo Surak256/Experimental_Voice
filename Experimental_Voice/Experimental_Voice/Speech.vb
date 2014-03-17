@@ -214,6 +214,11 @@ Namespace x32
         ''' brackets must contain two numbers, the upper and lower bounds for the number of letters 
         ''' recognized. Ex: [A 0 9]</para>
         ''' 
+        ''' <para>An "R" character indicates that the rule references another rule. The brackets
+        ''' contain the case-sensitive rule name of the referenced rule. Any given rule may be referenced,
+        ''' however the rule may not directly or indirectly reference itself. This precludes using the
+        ''' "Main" rule as a subrule. Ex: [R Digit]</para>
+        ''' 
         ''' <para>These elements can be combined to create highly adaptive rules. The List and Optional
         ''' elements can contain within them other elements of any type. For example the rule:
         ''' "Run program [* 1 5] [? in [L normal|maximized|minimized|fullscreen] format]" requires
@@ -234,6 +239,26 @@ Namespace x32
                 builder.Commit(0)
             Catch ex As Exception
                 monitor.writeLine("Critical error adding command:")
+                monitor.writeLine(ex.ToString())
+                monitor.writeLine(ex.StackTrace)
+            End Try
+        End Sub
+
+        ''' <summary>
+        ''' Adds a subrule that can be referenced by other rules but not recognized on its own.
+        ''' </summary>
+        ''' <param name="Name">Name of the rule (Must be unique)</param>
+        ''' <param name="Text">Text of the command</param>
+        ''' <remarks>
+        ''' Command text is interpreted exactly as in a command.
+        ''' </remarks>
+        Public Sub addSubRule(ByVal Name As String, ByVal Text As String)
+            monitor.writeLine("Adding subrule: " & Name)
+            monitor.writeLine("    CommandText: " & Text)
+            Try
+                Throw New NotImplementedException("Subrules are not implemented yet")
+            Catch ex As Exception
+                monitor.writeLine("Critical error adding rule:")
                 monitor.writeLine(ex.ToString())
                 monitor.writeLine(ex.StackTrace)
             End Try
