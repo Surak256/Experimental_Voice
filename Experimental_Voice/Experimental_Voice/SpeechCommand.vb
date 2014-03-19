@@ -16,6 +16,7 @@
         Private _Name As String
         Private _Text As String
         Private Command As ComplexCommandHandler
+        Private _dependencies As List(Of String)
 
         Public Sub New(ByVal Name As String, ByVal Text As String, ByVal command As ComplexCommandHandler)
             _Name = Name
@@ -32,6 +33,14 @@
                 Return _Name
             End Get
         End Property
+
+        Protected Friend Sub AddDependency(ByVal rule As String)
+            _dependencies.Add(rule)
+        End Sub
+
+        Public Function DependsOn(ByVal rule As String) As Boolean
+            Return _dependencies.Contains(rule)
+        End Function
     End Class
 
 End Namespace
