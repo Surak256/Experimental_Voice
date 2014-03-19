@@ -276,6 +276,14 @@ Namespace x32
                             Dim min As Integer = nodes(i).Substring(3, nodes(i).Length - 4).Split(" ")(0)
                             Dim max As Integer = nodes(i).Substring(3, nodes(i).Length - 4).Split(" ")(1)
                             addMultipleTransition(min, max, hStates(i), hStates(i + 1), hStateGreekLetter)
+                        Case "R"
+                            monitor.writeLine("Rule reference")
+                            Dim subRule As String = nodes(i).Substring(3, nodes(i).Length - 4)
+                            If _commandMap.ContainsKey(subRule) Then
+                                Dim hStateRule As IntPtr
+                                builder.GetRule(subRule, 0, Nothing, False, hStateRule)
+                                builder.AddRuleTransition(hStates(i), hStates(i + 1), hStateRule, 1, Nothing)
+                            End If
                         Case "A"
                             monitor.writeLine("Phonetic alphabet - Not yet implemented")
                             Dim min As Integer = nodes(i).Substring(3, nodes(i).Length - 4).Split(" ")(0)
