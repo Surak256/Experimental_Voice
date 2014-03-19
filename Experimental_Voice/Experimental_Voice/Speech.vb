@@ -11,6 +11,7 @@ Namespace x32
 
         'Functional variables
         Private _commandMap As New Dictionary(Of String, ComplexSpeechCommand)
+        Private _internalCommands As New List(Of String)
 
         Private speechEngine As SpInprocRecognizer
         Private listener As SpInProcRecoContext
@@ -55,6 +56,7 @@ Namespace x32
                 'Main rule
                 Dim hStateMain As IntPtr
                 builder.GetRule("Main", 0, SpeechLib.SpeechRuleAttributes.SRATopLevel, True, hStateMain)
+                _internalCommands.Add("Main")
                 'Interim state
                 Dim hStateMain2 As IntPtr
                 builder.CreateNewState(hStateMain, hStateMain2)
@@ -62,15 +64,18 @@ Namespace x32
                 builder.AddWordTransition(hStateMain, hStateMain2, "Computer,", " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
                 'Command rule
                 builder.GetRule("Command", 0, SpeechRuleAttributes.SRATopLevel, True, commandListPtr)
+                _internalCommands.Add("Command")
                 builder.AddRuleTransition(hStateMain2, Nothing, commandListPtr, 1, Nothing)
                 'Epsilon transition
                 'Required to have a full path to Nothing
                 builder.AddWordTransition(commandListPtr, Nothing, Nothing, Nothing, SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
                 'Utility rule for numbers
                 addSubRule("Digit", "[L zero|one|two|three|four|five|six|seven|eight|nine]")
+                _internalCommands.Add("Digit")
                 builder.GetRule("Digit", 0, SpeechRuleAttributes.SRATopLevel, False, hStateDigit)
                 'Utility rule for Greek Letters
                 addSubRule("Greek Letter", "[L alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|omicron|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega]")
+                _internalCommands.Add("Greek Letter")
                 builder.GetRule("Greek Letter", 0, SpeechRuleAttributes.SRATopLevel, False, hStateGreekLetter)
                 'Commit and set active
                 monitor.writeLine("Committing changes")
@@ -357,7 +362,7 @@ Namespace x32
         End Sub
 
         Public Sub removeCommand(ByVal Name As String)
-            If _commandMap.ContainsKey(Name) Then
+            If _commandMap.ContainsKey(Name) And Not _internalCommands.Contains(Name) Then
                 monitor.writeLine("Removing command: " & Name)
                 Dim hStateRemoved As IntPtr
                 'Creates rule if it doesn't exist, otherwise returns current rule
