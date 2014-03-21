@@ -206,7 +206,7 @@ Namespace x32
                 Dim hStateNewCommand As IntPtr
                 builder.GetRule(Name, 0, SpeechRuleAttributes.SRADynamic, True, hStateNewCommand)
                 builder.AddRuleTransition(commandListPtr, Nothing, hStateNewCommand, 1, Nothing)
-                ParseCommandText(Text, hStateNewCommand, Nothing)
+                ParseCommandText(Text, hStateNewCommand, Nothing, myCommand)
                 builder.Commit(0)
             Catch ex As Exception
                 monitor.writeLine("Critical error adding command:")
@@ -231,7 +231,7 @@ Namespace x32
                 _commandMap.Add(myRule.Name, myRule)
                 Dim hStateNewRule As IntPtr
                 builder.GetRule(Name, 0, SpeechRuleAttributes.SRATopLevel, True, hStateNewRule)
-                ParseCommandText(Text, hStateNewRule, Nothing)
+                ParseCommandText(Text, hStateNewRule, Nothing, myRule)
                 builder.Commit(0)
                 grammar.CmdSetRuleState(Name, SpeechRuleState.SGDSInactive)
             Catch ex As Exception
@@ -241,7 +241,7 @@ Namespace x32
             End Try
         End Sub
 
-        Private Sub ParseCommandText(ByVal Text As String, ByRef hStateBefore As IntPtr, ByRef hStateAfter As IntPtr)
+        Private Sub ParseCommandText(ByVal Text As String, ByRef hStateBefore As IntPtr, ByRef hStateAfter As IntPtr, ByVal Command As ComplexSpeechCommand)
             monitor.writeLine("Parsing command: " & Text)
             Dim nodes As String() = SeparateIntoNodes(Text)
             Dim hStates(nodes.Length) As IntPtr
@@ -260,12 +260,12 @@ Namespace x32
                             Dim items As String() = nodes(i).Substring(3, nodes(i).Length - 4).Split("|")
                             For Each item As String In items
                                 monitor.writeLine("    Adding item: " & item)
-                                ParseCommandText(item, hStates(i), hStates(i + 1))
+                                ParseCommandText(item, hStates(i), hStates(i + 1), Command)
                             Next
                         Case "?"
                             monitor.writeLine("Optional")
                             builder.AddWordTransition(hStates(i), hStates(i + 1), Nothing, Nothing, SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
-                            ParseCommandText(nodes(i).Substring(3, nodes(i).Length - 4), hStates(i), hStates(i + 1))
+                            ParseCommandText(nodes(i).Substring(3, nodes(i).Length - 4), hStates(i), hStates(i + 1), Command)
                         Case "*"
                             monitor.writeLine("Dictation")
                             Dim min As Integer = nodes(i).Substring(3, nodes(i).Length - 4).Split(" ")(0)
@@ -288,6 +288,7 @@ Namespace x32
                                 Dim hStateRule As IntPtr
                                 builder.GetRule(subRule, 0, Nothing, False, hStateRule)
                                 builder.AddRuleTransition(hStates(i), hStates(i + 1), hStateRule, 1, Nothing)
+                                Command.AddDependency(subRule)
                             End If
                         Case "A"
                             monitor.writeLine("Phonetic alphabet - Not yet implemented")
@@ -364,11 +365,19 @@ Namespace x32
         Public Sub removeCommand(ByVal Name As String)
             If _commandMap.ContainsKey(Name) And Not _internalCommands.Contains(Name) Then
                 monitor.writeLine("Removing command: " & Name)
-                Dim hStateRemoved As IntPtr
-                'Creates rule if it doesn't exist, otherwise returns current rule
-                builder.GetRule(Name, 0, 0, True, hStateRemoved)
-                builder.ClearRule(hStateRemoved)
-                builder.Commit(0)
+                Dim found As Boolean = False
+                For Each myRule As ComplexSpeechCommand In _commandMap.Values
+                    If myRule.DependsOn(Name) Then found = True
+                Next
+                If Not found Then
+                    Dim hStateRemoved As IntPtr
+                    'Creates rule if it doesn't exist, otherwise returns current rule
+                    builder.GetRule(Name, 0, 0, True, hStateRemoved)
+                    builder.ClearRule(hStateRemoved)
+                    builder.Commit(0)
+                Else
+                    monitor.writeLine("Cannot remove rule while other rules depend on it.")
+                End If
             Else
                 monitor.writeLine("Cannot remove command that is internal or nonexistant.")
             End If
