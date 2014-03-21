@@ -26,6 +26,7 @@ Partial Class frmMonitor
         Me.btnNewCommand = New System.Windows.Forms.Button
         Me.btnRemove = New System.Windows.Forms.Button
         Me.btnDisplay = New System.Windows.Forms.Button
+        Me.btnSubRule = New System.Windows.Forms.Button
         Me.SuspendLayout()
         '
         'txtOut
@@ -71,11 +72,21 @@ Partial Class frmMonitor
         Me.btnDisplay.Text = "Display grammar"
         Me.btnDisplay.UseVisualStyleBackColor = True
         '
+        'btnSubRule
+        '
+        Me.btnSubRule.Location = New System.Drawing.Point(125, 332)
+        Me.btnSubRule.Name = "btnSubRule"
+        Me.btnSubRule.Size = New System.Drawing.Size(106, 23)
+        Me.btnSubRule.TabIndex = 4
+        Me.btnSubRule.Text = "Add Subrule"
+        Me.btnSubRule.UseVisualStyleBackColor = True
+        '
         'frmMonitor
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(518, 405)
+        Me.Controls.Add(Me.btnSubRule)
         Me.Controls.Add(Me.btnDisplay)
         Me.Controls.Add(Me.btnRemove)
         Me.Controls.Add(Me.btnNewCommand)
@@ -90,5 +101,6 @@ Partial Class frmMonitor
     Friend WithEvents btnNewCommand As System.Windows.Forms.Button
     Friend WithEvents btnRemove As System.Windows.Forms.Button
     Friend WithEvents btnDisplay As System.Windows.Forms.Button
+    Friend WithEvents btnSubRule As System.Windows.Forms.Button
 
 End Class

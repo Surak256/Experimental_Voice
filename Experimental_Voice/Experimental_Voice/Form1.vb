@@ -63,4 +63,10 @@
     Private Sub btnDisplay_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnDisplay.Click
         mySpeech.DisplayGrammar()
     End Sub
+
+    Private Sub btnSubRule_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnSubRule.Click
+        Dim name As String = InputBox("Input the subrule's name. (Must be unique)")
+        Dim text As String = InputBox("Input the text of the subrule.")
+        mySpeech.addSubRule(name, text)
+    End Sub
 End Class
