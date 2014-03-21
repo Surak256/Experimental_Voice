@@ -16,7 +16,7 @@
         Private _Name As String
         Private _Text As String
         Private Command As ComplexCommandHandler
-        Private _dependencies As List(Of String)
+        Private _dependencies As New List(Of String)
 
         Public Sub New(ByVal Name As String, ByVal Text As String, ByVal command As ComplexCommandHandler)
             _Name = Name
