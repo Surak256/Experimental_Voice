@@ -12,10 +12,18 @@
 
     Public Sub Write(ByVal text As String)
         txtOut.AppendText(text)
+        checkError(text)
     End Sub
 
     Public Sub writeLine(ByVal text As String)
         txtOut.AppendText(text & vbNewLine)
+        checkError(text)
+    End Sub
+
+    Private Sub checkError(ByVal text As String)
+        If text.Contains("Critical error") Then
+            txtOut.BackColor = Color.Red
+        End If
     End Sub
 
     Public Sub frmMonitor_Load(ByVal sender As Object, ByVal e As EventArgs) Handles Me.Load
