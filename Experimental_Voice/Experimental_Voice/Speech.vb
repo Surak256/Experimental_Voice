@@ -261,7 +261,7 @@ Namespace x32
                     Select Case nodes(i).Substring(1, 1)
                         Case "L"
                             monitor.writeLine("List")
-                            Dim items As String() = nodes(i).Substring(3, nodes(i).Length - 4).Split("|")
+                            Dim items As String() = SeparateListNodes(nodes(i).Substring(3, nodes(i).Length - 4))
                             For Each item As String In items
                                 monitor.writeLine("    Adding item: " & item)
                                 ParseCommandText(item, hStates(i), hStates(i + 1), Command)
@@ -348,6 +348,15 @@ Namespace x32
                 monitor.writeLine("Simple phrase")
                 Dim ret As String() = {Text}
                 Return ret
+            End If
+        End Function
+
+        Public Function SeparateListNodes(ByVal Text As String) As String()
+            If Text.Contains("[L") Then
+                Throw New Exception("Unable to separate list nodes that contain interior lists yet.")
+            Else
+                'No subnodes with lists
+                Return Text.Split("|")
             End If
         End Function
 
