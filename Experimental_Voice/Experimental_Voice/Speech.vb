@@ -103,6 +103,7 @@ Namespace x32
                 _commandMap.Add(myCommand.Name, myCommand)
                 Dim hStateNewCommand As IntPtr
                 builder.GetRule(CommandName, 0, SpeechLib.SpeechRuleAttributes.SRADynamic, True, hStateNewCommand)
+                builder.ClearRule(hStateNewCommand)
                 builder.AddRuleTransition(commandListPtr, Nothing, hStateNewCommand, 1, Nothing)
                 builder.AddWordTransition(hStateNewCommand, Nothing, commandName, " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
                 builder.Commit(0)
@@ -129,6 +130,7 @@ Namespace x32
                 _commandMap.Add(myCommand.Name, myCommand)
                 Dim hStateNewCommand As IntPtr
                 builder.GetRule(CommandName, 0, SpeechLib.SpeechRuleAttributes.SRADynamic, True, hStateNewCommand)
+                builder.ClearRule(hStateNewCommand)
                 builder.AddRuleTransition(commandListPtr, Nothing, hStateNewCommand, 1, Nothing)
                 builder.AddWordTransition(hStateNewCommand, Nothing, CommandName, " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
                 builder.Commit(0)
@@ -205,6 +207,7 @@ Namespace x32
                 _commandMap.Add(myCommand.Name, myCommand)
                 Dim hStateNewCommand As IntPtr
                 builder.GetRule(Name, 0, SpeechRuleAttributes.SRADynamic, True, hStateNewCommand)
+                builder.ClearRule(hStateNewCommand)
                 builder.AddRuleTransition(commandListPtr, Nothing, hStateNewCommand, 1, Nothing)
                 ParseCommandText(Text, hStateNewCommand, Nothing, myCommand)
                 builder.Commit(0)
@@ -231,6 +234,7 @@ Namespace x32
                 _commandMap.Add(myRule.Name, myRule)
                 Dim hStateNewRule As IntPtr
                 builder.GetRule(Name, 0, SpeechRuleAttributes.SRATopLevel, True, hStateNewRule)
+                builder.ClearRule(hStateNewRule)
                 ParseCommandText(Text, hStateNewRule, Nothing, myRule)
                 builder.Commit(0)
                 grammar.CmdSetRuleState(Name, SpeechRuleState.SGDSInactive)
