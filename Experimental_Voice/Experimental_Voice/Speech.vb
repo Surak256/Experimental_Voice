@@ -352,11 +352,38 @@ Namespace x32
         End Function
 
         Public Function SeparateListNodes(ByVal Text As String) As String()
+            Dim splitList As New List(Of String)
+            splitList.AddRange(Text.Split("|"))
             If Text.Contains("[L") Then
-                Throw New Exception("Unable to separate list nodes that contain interior lists yet.")
+                Dim nodeList As New List(Of String)
+                Dim openCount As Integer = 0
+                Dim closeCount As Integer = 0
+                Dim currentNode As String = ""
+                For Each myString As String In splitList
+                    If openCount <> closeCount Then
+                        'Some previous node was a list, we need a separator
+                        currentNode = currentNode & "|"
+                    End If
+                    If myString.Contains("[") Or myString.Contains("]") Then
+                        'Count brackets
+                        For Each c As Char In myString.ToCharArray
+                            If c = "[" Then
+                                openCount += 1
+                            ElseIf c = "]" Then
+                                closeCount += 1
+                            End If
+                        Next
+                    End If
+                    currentNode = currentNode & myString
+                    If openCount = closeCount Then
+                        nodeList.Add(currentNode)
+                        currentNode = ""
+                    End If
+                Next
+                Return nodeList.ToArray()
             Else
                 'No subnodes with lists
-                Return Text.Split("|")
+                Return splitList.ToArray()
             End If
         End Function
 
