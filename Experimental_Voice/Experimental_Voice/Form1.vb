@@ -69,4 +69,14 @@
         Dim text As String = InputBox("Input the text of the subrule.")
         mySpeech.addSubRule(name, text)
     End Sub
+
+    Private Sub btnValidate_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnValidate.Click
+        Dim text As String = InputBox("Enter the text of the rule to validate")
+        Dim isValid As x32.CommandTextValidationError = mySpeech.IsValidCommand(text)
+        If isValid = x32.CommandTextValidationError.NO_ERROR Then
+            MsgBox("Valid!")
+        Else
+            MsgBox("Invalid." & vbNewLine & isValid.ToString())
+        End If
+    End Sub
 End Class

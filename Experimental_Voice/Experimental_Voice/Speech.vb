@@ -460,5 +460,84 @@ Namespace x32
                 monitor.writeLine("    " & grammar.Rules.Item(i).Name)
             Next
         End Sub
+
+        Public Function IsValidCommand(ByVal CommandText As String) As CommandTextValidationError
+            'Check bracket balancing and format - Enough to pass to node separators
+            Dim chars As Char() = CommandText.ToCharArray()
+            Dim i As Integer = 0
+            Dim openCount As Integer = 0
+            Dim closeCount As Integer = 0
+            Try
+                While i < chars.Length
+                    If chars(i) = "[" Then
+                        openCount += 1
+                        'Validate node format
+                        If chars(i + 2) <> " " Then
+                            Return CommandTextValidationError.ERROR_INVALID_NODE_FORMAT
+                        End If
+                    End If
+                    If chars(i) = "]" Then
+                        closeCount += 1
+                    End If
+                    i += 1
+                End While
+            Catch ex As IndexOutOfRangeException
+                Return CommandTextValidationError.ERROR_INVALID_NODE_FORMAT
+            End Try
+            If openCount = closeCount Then
+                'Brackets balance and have valid node formats
+                For Each myNode As String In SeparateIntoNodes(CommandText)
+                    If myNode.StartsWith("[") Then
+                        'Special node, needs additional validation
+                        Dim type As String = myNode.Substring(1, 1)
+                        If type = "L" Then
+                            'Separate list nodes and validate each one
+                            For Each myListNode In SeparateListNodes(myNode.Substring(3, myNode.Length - 4))
+                                Dim isValid As CommandTextValidationError = IsValidCommand(myListNode)
+                                If Not isValid = CommandTextValidationError.NO_ERROR Then
+                                    Return isValid
+                                End If
+                            Next
+                        ElseIf type = "?" Then
+                            'Check contents
+                            Dim isValid As CommandTextValidationError = IsValidCommand(myNode.Substring(3, myNode.Length - 4))
+                            If Not isValid = CommandTextValidationError.NO_ERROR Then
+                                Return isValid
+                            End If
+                        ElseIf type = "*" Or type = "#" Or type = "G" Or type = "A" Then
+                            Dim parts As String() = myNode.Substring(3, myNode.Length - 4).Split(" ")
+                            If parts.Length <> 2 Then
+                                Return CommandTextValidationError.ERROR_INCORRECT_NODE_CONTENTS
+                            End If
+                            If Not (IsNumeric(parts(0)) And IsNumeric(parts(1))) Then
+                                Return CommandTextValidationError.ERROR_INCORRECT_NODE_CONTENTS
+                            End If
+                        ElseIf type = "R" Then
+                            Dim rule As String = myNode.Substring(3, myNode.Length - 4)
+                            If Not _commandMap.ContainsKey(rule) Then
+                                Return CommandTextValidationError.ERROR_UNDEFINED_RULE_REFERENCED
+                            End If
+                        Else
+                            'Unknown node type
+                            Return CommandTextValidationError.ERROR_UNKNOWN_NODE_TYPE
+                        End If
+                    End If
+                Next
+            Else
+                Return CommandTextValidationError.ERROR_BRACKET_MISMATCH
+            End If
+            'Everything passed
+            Return CommandTextValidationError.NO_ERROR
+        End Function
+
+
     End Class
+    Public Enum CommandTextValidationError
+        NO_ERROR = 0
+        ERROR_BRACKET_MISMATCH = 1
+        ERROR_INVALID_NODE_FORMAT = 2
+        ERROR_UNKNOWN_NODE_TYPE = 3
+        ERROR_INCORRECT_NODE_CONTENTS = 4
+        ERROR_UNDEFINED_RULE_REFERENCED = 5
+    End Enum
 End Namespace
