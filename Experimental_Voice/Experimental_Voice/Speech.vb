@@ -202,20 +202,26 @@ Namespace x32
         Public Sub addCommand(ByVal Name As String, ByVal Command As ComplexCommandHandler, ByVal Text As String)
             monitor.writeLine("Adding complex command: " & Name)
             monitor.writeLine("    Command text: " & Text)
-            Try
-                Dim myCommand As New ComplexSpeechCommand(Name, Text, Command)
-                _commandMap.Add(myCommand.Name, myCommand)
-                Dim hStateNewCommand As IntPtr
-                builder.GetRule(Name, 0, SpeechRuleAttributes.SRADynamic, True, hStateNewCommand)
-                builder.ClearRule(hStateNewCommand)
-                builder.AddRuleTransition(commandListPtr, Nothing, hStateNewCommand, 1, Nothing)
-                ParseCommandText(Text, hStateNewCommand, Nothing, myCommand)
-                builder.Commit(0)
-            Catch ex As Exception
-                monitor.writeLine("Critical error adding command:")
-                monitor.writeLine(ex.ToString())
-                monitor.writeLine(ex.StackTrace)
-            End Try
+            Dim isValid As CommandTextValidationError = IsValidCommand(Text)
+            If isValid = CommandTextValidationError.NO_ERROR Then
+                Try
+                    Dim myCommand As New ComplexSpeechCommand(Name, Text, Command)
+                    _commandMap.Add(myCommand.Name, myCommand)
+                    Dim hStateNewCommand As IntPtr
+                    builder.GetRule(Name, 0, SpeechRuleAttributes.SRADynamic, True, hStateNewCommand)
+                    builder.ClearRule(hStateNewCommand)
+                    builder.AddRuleTransition(commandListPtr, Nothing, hStateNewCommand, 1, Nothing)
+                    ParseCommandText(Text, hStateNewCommand, Nothing, myCommand)
+                    builder.Commit(0)
+                Catch ex As Exception
+                    monitor.writeLine("Critical error adding command:")
+                    monitor.writeLine(ex.ToString())
+                    monitor.writeLine(ex.StackTrace)
+                End Try
+            Else
+                'Throw an exception
+                monitor.writeLine("    Invalid command text: " & isValid.ToString())
+            End If
         End Sub
 
         ''' <summary>
@@ -229,20 +235,26 @@ Namespace x32
         Public Sub addSubRule(ByVal Name As String, ByVal Text As String)
             monitor.writeLine("Adding subrule: " & Name)
             monitor.writeLine("    CommandText: " & Text)
-            Try
-                Dim myRule As New ComplexSpeechCommand(Name, Text, Nothing)
-                _commandMap.Add(myRule.Name, myRule)
-                Dim hStateNewRule As IntPtr
-                builder.GetRule(Name, 0, SpeechRuleAttributes.SRATopLevel, True, hStateNewRule)
-                builder.ClearRule(hStateNewRule)
-                ParseCommandText(Text, hStateNewRule, Nothing, myRule)
-                builder.Commit(0)
-                grammar.CmdSetRuleState(Name, SpeechRuleState.SGDSInactive)
-            Catch ex As Exception
-                monitor.writeLine("Critical error adding rule:")
-                monitor.writeLine(ex.ToString())
-                monitor.writeLine(ex.StackTrace)
-            End Try
+            Dim isValid As CommandTextValidationError = IsValidCommand(Text)
+            If isValid = CommandTextValidationError.NO_ERROR Then
+                Try
+                    Dim myRule As New ComplexSpeechCommand(Name, Text, Nothing)
+                    _commandMap.Add(myRule.Name, myRule)
+                    Dim hStateNewRule As IntPtr
+                    builder.GetRule(Name, 0, SpeechRuleAttributes.SRATopLevel, True, hStateNewRule)
+                    builder.ClearRule(hStateNewRule)
+                    ParseCommandText(Text, hStateNewRule, Nothing, myRule)
+                    builder.Commit(0)
+                    grammar.CmdSetRuleState(Name, SpeechRuleState.SGDSInactive)
+                Catch ex As Exception
+                    monitor.writeLine("Critical error adding rule:")
+                    monitor.writeLine(ex.ToString())
+                    monitor.writeLine(ex.StackTrace)
+                End Try
+            Else
+                'Throw an exception
+                monitor.writeLine("    Invalid command text: " & isValid.ToString())
+            End If
         End Sub
 
         Private Sub ParseCommandText(ByVal Text As String, ByRef hStateBefore As IntPtr, ByRef hStateAfter As IntPtr, ByVal Command As ComplexSpeechCommand)
