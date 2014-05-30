@@ -1,10 +1,18 @@
 ﻿Imports SpeechLib
 
+'TODO:
+'   Remove debug monitor
+'   Add checks for circular rule references
+'   Remove simple commands?
+
 Namespace x32
     Public Delegate Sub CommandHandler()
 
     Public Delegate Sub ComplexCommandHandler(ByVal result As ISpeechPhraseInfo)
 
+    ''' <summary>
+    ''' Contains methods to create, modify, and use a dynamic grammar for interpreting speech.
+    ''' </summary>
     Public Class Speech
         'Debug variables
         Private monitor As frmMonitor
@@ -26,12 +34,22 @@ Namespace x32
         Private _continuousCommands As Boolean = False
 
         'Constants
+        ''' <summary>
+        ''' Constant for a dictation transition.
+        ''' </summary>
         Public Const SPRULETRANS_DICTATION As Int32 = -3
 
+        ''' <summary>
+        ''' Creates a new Speech object
+        ''' </summary>
+        ''' <param name="monitor">Debug monitor</param>
         Public Sub New(ByVal monitor As frmMonitor)
             Me.monitor = monitor
         End Sub
 
+        ''' <summary>
+        ''' Loads the speech recognizer and initializes internal commands.
+        ''' </summary>
         Public Sub LoadSpeech()
             Try
                 'Load recognizer
@@ -334,6 +352,15 @@ Namespace x32
             Next
         End Sub
 
+        ''' <summary>
+        ''' Separates a command's text into its top-level nodes
+        ''' </summary>
+        ''' <param name="Text">Text of the command</param>
+        ''' <returns>Array of strings for the command's nodes.</returns>
+        ''' <remarks>
+        ''' Optional and List nodes contain sub nodes that have to be processed separately. This 
+        ''' function will not separate enclosed nodes.
+        ''' </remarks>
         Public Function SeparateIntoNodes(ByVal Text As String) As String()
             If Text.Contains("[") Then
                 Dim nodeList As New List(Of String)
@@ -375,6 +402,15 @@ Namespace x32
             End If
         End Function
 
+        ''' <summary>
+        ''' Separates the elements of a list node
+        ''' </summary>
+        ''' <param name="Text">Text of the list node. Does not include outer brackets.</param>
+        ''' <returns>Array of list elements as strings</returns>
+        ''' <remarks>
+        ''' The list nodes cannot simply be separated with <see cref="Split">String.Split()</see>
+        ''' if the list contains a second list within it. This function solves that problem.
+        ''' </remarks>
         Public Function SeparateListNodes(ByVal Text As String) As String()
             Dim splitList As New List(Of String)
             splitList.AddRange(Text.Split("|"))
@@ -426,6 +462,19 @@ Namespace x32
             Next
         End Sub
 
+        ''' <summary>
+        ''' Removes a command or rule from the grammar
+        ''' </summary>
+        ''' <param name="Name">Name of command or rule to remove</param>
+        ''' <remarks>
+        ''' The command or rule will not be removed in the following cases:
+        ''' <list>
+        ''' <item>The command or rule does not exist</item>
+        ''' <item>The command or rule is internal</item>
+        ''' <item>There are other commands or rules that depend on the rule to be removed.</item>
+        ''' </list>
+        ''' In these cases removeCommand() will fail silently.
+        ''' </remarks>
         Public Sub removeCommand(ByVal Name As String)
             If _commandMap.ContainsKey(Name) And Not _internalCommands.Contains(Name) Then
                 monitor.writeLine("Removing command: " & Name)
@@ -478,6 +527,9 @@ Namespace x32
                 End If
             End If
         End Sub
+        ''' <summary>
+        ''' Temporary function for debugging. Lists all rules currently in the grammar.
+        ''' </summary>
         Public Sub DisplayGrammar()
             monitor.writeLine("Rule listing:")
             For i As Integer = 0 To grammar.Rules.Count - 1
@@ -485,6 +537,24 @@ Namespace x32
             Next
         End Sub
 
+        ''' <summary>
+        ''' Validates a command's text.
+        ''' </summary>
+        ''' <param name="CommandText">Text to validate</param>
+        ''' <returns><see cref="CommandTextValidationError.NO_ERROR">NO_ERROR</see> if valid.</returns>
+        ''' <remarks>
+        ''' This function checks the command's validity in several ways:
+        ''' 
+        ''' Any brackets are checked to see if they are properly matched and contain node information
+        ''' in the correct format.
+        ''' 
+        ''' Any nodes used are checked against the list of valid nodes. Their contents are also checked
+        ''' for the correct format for their node type
+        ''' 
+        ''' Any complex nodes used have their contents independantly checked for validity.
+        ''' 
+        ''' Any rules referenced are checked to see if they exist.
+        ''' </remarks>
         Public Function IsValidCommand(ByVal CommandText As String) As CommandTextValidationError
             'Check bracket balancing and format - Enough to pass to node separators
             Dim chars As Char() = CommandText.ToCharArray()
@@ -556,12 +626,34 @@ Namespace x32
 
 
     End Class
+
+    ''' <summary>
+    ''' Possible values for a command text validation to produce
+    ''' </summary>
     Public Enum CommandTextValidationError
+        ''' <summary>
+        ''' No errors; the command text is a valid rule.
+        ''' </summary>
         NO_ERROR = 0
+        ''' <summary>
+        ''' Incorrect number of opening and closing brackets
+        ''' </summary>
         ERROR_BRACKET_MISMATCH = 1
+        ''' <summary>
+        ''' Node does not follow correct format. (Bracket followed by one character and a space)
+        ''' </summary>
         ERROR_INVALID_NODE_FORMAT = 2
+        ''' <summary>
+        ''' Unknown node identifier used.
+        ''' </summary>
         ERROR_UNKNOWN_NODE_TYPE = 3
+        ''' <summary>
+        ''' Node contents are incorrect for the node type.
+        ''' </summary>
         ERROR_INCORRECT_NODE_CONTENTS = 4
+        ''' <summary>
+        ''' A rule reference is to an undefined rule. (Case-sensitive)
+        ''' </summary>
         ERROR_UNDEFINED_RULE_REFERENCED = 5
     End Enum
 End Namespace
