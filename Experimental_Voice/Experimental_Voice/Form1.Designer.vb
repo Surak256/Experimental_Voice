@@ -75,6 +75,7 @@ Partial Class frmMonitor
         '
         'btnSubRule
         '
+        Me.btnSubRule.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.btnSubRule.Location = New System.Drawing.Point(125, 332)
         Me.btnSubRule.Name = "btnSubRule"
         Me.btnSubRule.Size = New System.Drawing.Size(106, 23)
@@ -84,6 +85,7 @@ Partial Class frmMonitor
         '
         'btnValidate
         '
+        Me.btnValidate.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
         Me.btnValidate.Location = New System.Drawing.Point(125, 362)
         Me.btnValidate.Name = "btnValidate"
         Me.btnValidate.Size = New System.Drawing.Size(106, 23)
