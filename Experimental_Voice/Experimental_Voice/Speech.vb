@@ -100,6 +100,9 @@ Namespace x32
             monitor.writeLine("Adding simple command: " & CommandName)
             Try
                 Dim myCommand As New SimpleSpeechCommand(CommandName, Command)
+                If _commandMap.ContainsKey(CommandName) Then
+                    _commandMap.Remove(CommandName)
+                End If
                 _commandMap.Add(myCommand.Name, myCommand)
                 Dim hStateNewCommand As IntPtr
                 builder.GetRule(CommandName, 0, SpeechLib.SpeechRuleAttributes.SRADynamic, True, hStateNewCommand)
@@ -127,6 +130,9 @@ Namespace x32
             monitor.writeLine("Adding command with complex handler: " & CommandName)
             Try
                 Dim myCommand As New ComplexSpeechCommand(CommandName, CommandName, Command)
+                If _commandMap.ContainsKey(CommandName) Then
+                    _commandMap.Remove(CommandName)
+                End If
                 _commandMap.Add(myCommand.Name, myCommand)
                 Dim hStateNewCommand As IntPtr
                 builder.GetRule(CommandName, 0, SpeechLib.SpeechRuleAttributes.SRADynamic, True, hStateNewCommand)
@@ -206,6 +212,9 @@ Namespace x32
             If isValid = CommandTextValidationError.NO_ERROR Then
                 Try
                     Dim myCommand As New ComplexSpeechCommand(Name, Text, Command)
+                    If _commandMap.ContainsKey(Name) Then
+                        _commandMap.Remove(Name)
+                    End If
                     _commandMap.Add(myCommand.Name, myCommand)
                     Dim hStateNewCommand As IntPtr
                     builder.GetRule(Name, 0, SpeechRuleAttributes.SRADynamic, True, hStateNewCommand)
@@ -239,6 +248,9 @@ Namespace x32
             If isValid = CommandTextValidationError.NO_ERROR Then
                 Try
                     Dim myRule As New ComplexSpeechCommand(Name, Text, Nothing)
+                    If _commandMap.ContainsKey(Name) Then
+                        _commandMap.Remove(Name)
+                    End If
                     _commandMap.Add(myRule.Name, myRule)
                     Dim hStateNewRule As IntPtr
                     builder.GetRule(Name, 0, SpeechRuleAttributes.SRATopLevel, True, hStateNewRule)
