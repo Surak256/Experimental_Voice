@@ -33,6 +33,17 @@ Namespace x32
         'State
         Private _continuousCommands As Boolean = False
 
+        'Logging state
+        Private logRecognitions As Boolean = True
+        Private logAdditions As Boolean = True
+        Private logRemovals As Boolean = True
+        Private logNodeSplitting As Boolean = False
+        Private logParsing As Boolean = False
+        Private logGeneral As Boolean = True
+        Private logInitialization As Boolean = False
+        Private logErrors As Boolean = True
+        Private logRecognitionsDetail As Boolean = False
+
         'Constants
         ''' <summary>
         ''' Constant for a dictation transition.
@@ -53,24 +64,24 @@ Namespace x32
         Public Sub LoadSpeech()
             Try
                 'Load recognizer
-                monitor.writeLine("Loading recognizer")
+                monitor.writeLineIf(logInitialization, "Loading recognizer")
                 speechEngine = New SpInprocRecognizer
                 listener = speechEngine.CreateRecoContext()
-                monitor.writeLine("Setting audio inputs")
+                monitor.writeLineIf(logInitialization, "Setting audio inputs")
                 Dim inputs As ISpeechObjectTokens = listener.Recognizer.GetAudioInputs()
                 If (inputs.Count < 1) Then
                     MsgBox("No audio inputs found!")
                 End If
                 listener.Recognizer.AudioInput = inputs.Item(0)
                 AddHandler listener.Recognition, AddressOf onRecognition
-                monitor.writeLine("Setting up grammar object")
+                monitor.writeLineIf(logInitialization, "Setting up grammar object")
                 grammar = listener.CreateGrammar(1)
                 grammar.DictationLoad()
                 grammar.DictationSetState(SpeechRuleState.SGDSInactive)
                 grammar.State = SpeechGrammarState.SGSEnabled
                 builder = grammar ' I have no idea why this works. It does.
                 'Load grammar
-                monitor.writeLine("Loading grammar")
+                monitor.writeLineIf(logInitialization, "Loading grammar")
                 'Main rule
                 Dim hStateMain As IntPtr
                 builder.GetRule("Main", 0, SpeechLib.SpeechRuleAttributes.SRATopLevel, True, hStateMain)
@@ -96,15 +107,15 @@ Namespace x32
                 _internalCommands.Add("Greek Letter")
                 builder.GetRule("Greek Letter", 0, SpeechRuleAttributes.SRATopLevel, False, hStateGreekLetter)
                 'Commit and set active
-                monitor.writeLine("Committing changes")
+                monitor.writeLineIf(logInitialization, "Committing changes")
                 builder.Commit(0)
                 grammar.CmdSetRuleState("Main", SpeechRuleState.SGDSActive)
                 grammar.CmdSetRuleState("Command", SpeechRuleState.SGDSInactive)
-                monitor.writeLine("Initialization complete. Listening.")
+                monitor.writeLineIf(logGeneral, "Initialization complete. Listening.")
             Catch ex As Exception
-                monitor.writeLine("Critical error:")
-                monitor.writeLine(ex.ToString())
-                monitor.writeLine(ex.StackTrace())
+                monitor.writeLineIf(logErrors, "Critical error:")
+                monitor.writeLineIf(logErrors, ex.ToString())
+                monitor.writeLineIf(logErrors, ex.StackTrace())
             End Try
         End Sub
 
@@ -115,7 +126,7 @@ Namespace x32
         ''' <param name="command">Sub to be run when the command is spoken</param>
         ''' <remarks></remarks>
         Public Sub addCommand(ByVal CommandName As String, ByRef Command As CommandHandler)
-            monitor.writeLine("Adding simple command: " & CommandName)
+            monitor.writeLineIf(logAdditions, "Adding simple command: " & CommandName)
             Try
                 Dim myCommand As New SimpleSpeechCommand(CommandName, Command)
                 If _commandMap.ContainsKey(CommandName) Then
@@ -126,12 +137,12 @@ Namespace x32
                 builder.GetRule(CommandName, 0, SpeechLib.SpeechRuleAttributes.SRADynamic, True, hStateNewCommand)
                 builder.ClearRule(hStateNewCommand)
                 builder.AddRuleTransition(commandListPtr, Nothing, hStateNewCommand, 1, Nothing)
-                builder.AddWordTransition(hStateNewCommand, Nothing, commandName, " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
+                builder.AddWordTransition(hStateNewCommand, Nothing, CommandName, " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
                 builder.Commit(0)
             Catch ex As Exception
-                monitor.writeLine("Critical error adding command:")
-                monitor.writeLine(ex.ToString())
-                monitor.writeLine(ex.StackTrace)
+                monitor.writeLineIf(logErrors, "Critical error adding command:")
+                monitor.writeLineIf(logErrors, ex.ToString())
+                monitor.writeLineIf(logErrors, ex.StackTrace)
             End Try
         End Sub
 
@@ -145,7 +156,7 @@ Namespace x32
         ''' it functions exactly the same as the overload that accepts a standard command handler.
         ''' </remarks>
         Public Sub addCommand(ByVal CommandName As String, ByRef Command As ComplexCommandHandler)
-            monitor.writeLine("Adding command with complex handler: " & CommandName)
+            monitor.writeLineIf(logAdditions, "Adding command with complex handler: " & CommandName)
             Try
                 Dim myCommand As New ComplexSpeechCommand(CommandName, CommandName, Command)
                 If _commandMap.ContainsKey(CommandName) Then
@@ -159,9 +170,9 @@ Namespace x32
                 builder.AddWordTransition(hStateNewCommand, Nothing, CommandName, " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
                 builder.Commit(0)
             Catch ex As Exception
-                monitor.writeLine("Critical error adding command:")
-                monitor.writeLine(ex.ToString())
-                monitor.writeLine(ex.StackTrace)
+                monitor.writeLineIf(logErrors, "Critical error adding command:")
+                monitor.writeLineIf(logErrors, ex.ToString())
+                monitor.writeLineIf(logErrors, ex.StackTrace)
             End Try
         End Sub
 
@@ -224,8 +235,8 @@ Namespace x32
         ''' need to be similarly adaptive when interpreting the recognized text.</para>
         ''' </remarks>
         Public Sub addCommand(ByVal Name As String, ByVal Command As ComplexCommandHandler, ByVal Text As String)
-            monitor.writeLine("Adding complex command: " & Name)
-            monitor.writeLine("    Command text: " & Text)
+            monitor.writeLineIf(logAdditions, "Adding complex command: " & Name)
+            monitor.writeLineIf(logParsing, "    Command text: " & Text)
             Dim isValid As CommandTextValidationError = IsValidCommand(Text)
             If isValid = CommandTextValidationError.NO_ERROR Then
                 Try
@@ -241,13 +252,13 @@ Namespace x32
                     ParseCommandText(Text, hStateNewCommand, Nothing, myCommand)
                     builder.Commit(0)
                 Catch ex As Exception
-                    monitor.writeLine("Critical error adding command:")
-                    monitor.writeLine(ex.ToString())
-                    monitor.writeLine(ex.StackTrace)
+                    monitor.writeLineIf(logErrors, "Critical error adding command:")
+                    monitor.writeLineIf(logErrors, ex.ToString())
+                    monitor.writeLineIf(logErrors, ex.StackTrace)
                 End Try
             Else
                 'Throw an exception
-                monitor.writeLine("    Invalid command text: " & isValid.ToString())
+                monitor.writeLineIf(logErrors, "    Invalid command text: " & isValid.ToString())
             End If
         End Sub
 
@@ -260,8 +271,8 @@ Namespace x32
         ''' Command text is interpreted exactly as in a command.
         ''' </remarks>
         Public Sub addSubRule(ByVal Name As String, ByVal Text As String)
-            monitor.writeLine("Adding subrule: " & Name)
-            monitor.writeLine("    CommandText: " & Text)
+            monitor.writeLineIf(logAdditions, "Adding subrule: " & Name)
+            monitor.writeLineIf(logParsing, "    CommandText: " & Text)
             Dim isValid As CommandTextValidationError = IsValidCommand(Text)
             If isValid = CommandTextValidationError.NO_ERROR Then
                 Try
@@ -277,18 +288,18 @@ Namespace x32
                     builder.Commit(0)
                     grammar.CmdSetRuleState(Name, SpeechRuleState.SGDSInactive)
                 Catch ex As Exception
-                    monitor.writeLine("Critical error adding rule:")
-                    monitor.writeLine(ex.ToString())
-                    monitor.writeLine(ex.StackTrace)
+                    monitor.writeLineIf(logErrors, "Critical error adding rule:")
+                    monitor.writeLineIf(logErrors, ex.ToString())
+                    monitor.writeLineIf(logErrors, ex.StackTrace)
                 End Try
             Else
                 'Throw an exception
-                monitor.writeLine("    Invalid command text: " & isValid.ToString())
+                monitor.writeLineIf(logErrors, "    Invalid command text: " & isValid.ToString())
             End If
         End Sub
 
         Private Sub ParseCommandText(ByVal Text As String, ByRef hStateBefore As IntPtr, ByRef hStateAfter As IntPtr, ByVal Command As ComplexSpeechCommand)
-            monitor.writeLine("Parsing command: " & Text)
+            monitor.writeLineIf(logParsing, "Parsing command: " & Text)
             Dim nodes As String() = SeparateIntoNodes(Text)
             Dim hStates(nodes.Length) As IntPtr
             hStates(0) = hStateBefore
@@ -297,38 +308,38 @@ Namespace x32
                 builder.CreateNewState(hStateBefore, hStates(i))
             Next
             For i As Integer = 0 To nodes.Length - 1
-                monitor.writeLine("Node: " & nodes(i))
-                monitor.Write("Node type: ")
+                monitor.writeLineIf(logParsing, "Node: " & nodes(i))
+                monitor.WriteIf(logParsing, "Node type: ")
                 If nodes(i).Substring(0, 1) = "[" Then
                     Select Case nodes(i).Substring(1, 1)
                         Case "L"
-                            monitor.writeLine("List")
+                            monitor.writeLineIf(logParsing, "List")
                             Dim items As String() = SeparateListNodes(nodes(i).Substring(3, nodes(i).Length - 4))
                             For Each item As String In items
-                                monitor.writeLine("    Adding item: " & item)
+                                monitor.writeLineIf(logParsing, "    Adding item: " & item)
                                 ParseCommandText(item, hStates(i), hStates(i + 1), Command)
                             Next
                         Case "?"
-                            monitor.writeLine("Optional")
+                            monitor.writeLineIf(logParsing, "Optional")
                             builder.AddWordTransition(hStates(i), hStates(i + 1), Nothing, Nothing, SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
                             ParseCommandText(nodes(i).Substring(3, nodes(i).Length - 4), hStates(i), hStates(i + 1), Command)
                         Case "*"
-                            monitor.writeLine("Dictation")
+                            monitor.writeLineIf(logParsing, "Dictation")
                             Dim min As Integer = nodes(i).Substring(3, nodes(i).Length - 4).Split(" ")(0)
                             Dim max As Integer = nodes(i).Substring(3, nodes(i).Length - 4).Split(" ")(1)
                             addMultipleTransition(min, max, hStates(i), hStates(i + 1), New IntPtr(SPRULETRANS_DICTATION))
                         Case "#"
-                            monitor.writeLine("Number")
+                            monitor.writeLineIf(logParsing, "Number")
                             Dim min As Integer = nodes(i).Substring(3, nodes(i).Length - 4).Split(" ")(0)
                             Dim max As Integer = nodes(i).Substring(3, nodes(i).Length - 4).Split(" ")(1)
                             addMultipleTransition(min, max, hStates(i), hStates(i + 1), hStateDigit)
                         Case "G"
-                            monitor.writeLine("Greek Alphabet")
+                            monitor.writeLineIf(logParsing, "Greek Alphabet")
                             Dim min As Integer = nodes(i).Substring(3, nodes(i).Length - 4).Split(" ")(0)
                             Dim max As Integer = nodes(i).Substring(3, nodes(i).Length - 4).Split(" ")(1)
                             addMultipleTransition(min, max, hStates(i), hStates(i + 1), hStateGreekLetter)
                         Case "R"
-                            monitor.writeLine("Rule reference")
+                            monitor.writeLineIf(logParsing, "Rule reference")
                             Dim subRule As String = nodes(i).Substring(3, nodes(i).Length - 4)
                             If _commandMap.ContainsKey(subRule) Then
                                 Dim hStateRule As IntPtr
@@ -337,16 +348,16 @@ Namespace x32
                                 Command.AddDependency(subRule)
                             End If
                         Case "A"
-                            monitor.writeLine("Phonetic alphabet - Not yet implemented")
+                            monitor.writeLineIf(logParsing, "Phonetic alphabet - Not yet implemented")
                             Dim min As Integer = nodes(i).Substring(3, nodes(i).Length - 4).Split(" ")(0)
                             Dim max As Integer = nodes(i).Substring(3, nodes(i).Length - 4).Split(" ")(1)
                             builder.AddWordTransition(hStates(i), hStates(i + 1), Nothing, Nothing, SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
                             'Add phonetic alphabet rule reference
                         Case Else
-                            monitor.writeLine("Unknown node type")
+                            monitor.writeLineIf(logErrors, "Unknown node type")
                     End Select
                 Else
-                    monitor.writeLine("Plaintext node")
+                    monitor.writeLineIf(logParsing, "Plaintext node")
                     builder.AddWordTransition(hStates(i), hStates(i + 1), nodes(i), " ", SPGRAMMARWORDTYPE.SPWT_LEXICAL, 1, Nothing)
                 End If
             Next
@@ -392,11 +403,11 @@ Namespace x32
                     limit += 1
                 End While
                 If limit = 100 Then
-                    monitor.writeLine("Limit exceeded. Error while parsing")
+                    monitor.writeLineIf(logNodeSplitting, "Limit exceeded. Error while parsing")
                 End If
                 Return nodeList.ToArray()
             Else 'Simple phrase
-                monitor.writeLine("Simple phrase")
+                monitor.writeLineIf(logNodeSplitting, "Simple phrase")
                 Dim ret As String() = {Text}
                 Return ret
             End If
@@ -477,7 +488,7 @@ Namespace x32
         ''' </remarks>
         Public Sub removeCommand(ByVal Name As String)
             If _commandMap.ContainsKey(Name) And Not _internalCommands.Contains(Name) Then
-                monitor.writeLine("Removing command: " & Name)
+                monitor.writeLineIf(logRemovals, "Removing command: " & Name)
                 Dim found As Boolean = False
                 For Each myRule As ComplexSpeechCommand In _commandMap.Values
                     If myRule.DependsOn(Name) Then found = True
@@ -489,20 +500,20 @@ Namespace x32
                     builder.ClearRule(hStateRemoved)
                     builder.Commit(0)
                 Else
-                    monitor.writeLine("Cannot remove rule while other rules depend on it.")
+                    monitor.writeLineIf(logRemovals, "Cannot remove rule while other rules depend on it.")
                 End If
             Else
-                monitor.writeLine("Cannot remove command that is internal or nonexistant.")
+                monitor.writeLineIf(logRemovals, "Cannot remove command that is internal or nonexistant.")
             End If
         End Sub
 
         Private Sub onRecognition(ByVal StreamNumber As Integer, ByVal StreamPosition As Object, ByVal RecognitionType As SpeechRecognitionType, ByVal Result As ISpeechRecoResult)
-            monitor.writeLine("Recognized: " & Result.PhraseInfo.GetText())
-            monitor.writeLine("    Rule name: " & Result.PhraseInfo.Rule.Name)
-            monitor.writeLine("    Rule ID: " & Result.PhraseInfo.Rule.Id)
+            monitor.writeLineIf(logRecognitions, "Recognized: " & Result.PhraseInfo.GetText())
+            monitor.writeLineIf(logRecognitionsDetail, "    Rule name: " & Result.PhraseInfo.Rule.Name)
+            monitor.writeLineIf(logRecognitionsDetail, "    Rule ID: " & Result.PhraseInfo.Rule.Id)
             If Result.PhraseInfo.Rule.Name = "Main" Then
                 If Result.PhraseInfo.Rule.Children.Item(0).Children Is Nothing Then
-                    monitor.writeLine("Listening for continuation of command.")
+                    monitor.writeLineIf(logGeneral, "Listening for continuation of command.")
                     grammar.CmdSetRuleState("Command", SpeechRuleState.SGDSActive)
                 Else
                     If Not _continuousCommands Then
@@ -515,7 +526,7 @@ Namespace x32
                 End If
             ElseIf Result.PhraseInfo.Rule.Name = "Command" Then
                 If Result.PhraseInfo.Rule.Children Is Nothing Then
-                    monitor.writeLine("Something went wrong!")
+                    monitor.writeLineIf(logErrors, "Something went wrong! Bad recognition structure.")
                 Else
                     If Not _continuousCommands Then
                         grammar.CmdSetRuleState("Command", SpeechRuleState.SGDSInactive)
@@ -531,9 +542,9 @@ Namespace x32
         ''' Temporary function for debugging. Lists all rules currently in the grammar.
         ''' </summary>
         Public Sub DisplayGrammar()
-            monitor.writeLine("Rule listing:")
+            monitor.writeLineIf(True, "Rule listing:")
             For i As Integer = 0 To grammar.Rules.Count - 1
-                monitor.writeLine("    " & grammar.Rules.Item(i).Name)
+                monitor.writeLineIf(True, "    " & grammar.Rules.Item(i).Name)
             Next
         End Sub
 

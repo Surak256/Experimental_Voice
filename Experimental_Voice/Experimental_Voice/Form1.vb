@@ -10,14 +10,18 @@
         mySpeech = New x32.Speech(Me)
     End Sub
 
-    Public Sub Write(ByVal text As String)
-        txtOut.AppendText(text)
-        checkError(text)
+    Public Sub WriteIf(ByVal condition As Boolean, ByVal text As String)
+        If condition Then
+            txtOut.AppendText(text)
+            checkError(text)
+        End If
     End Sub
 
-    Public Sub writeLine(ByVal text As String)
-        txtOut.AppendText(text & vbNewLine)
-        checkError(text)
+    Public Sub writeLineIf(ByVal condition As Boolean, ByVal text As String)
+        If condition Then
+            txtOut.AppendText(text & vbNewLine)
+            checkError(text)
+        End If
     End Sub
 
     Private Sub checkError(ByVal text As String)
