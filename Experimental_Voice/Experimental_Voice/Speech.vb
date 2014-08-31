@@ -635,6 +635,21 @@ Namespace x32
             Return CommandTextValidationError.NO_ERROR
         End Function
 
+        Public Property ContinuousCommands() As Boolean
+            Get
+                Return _continuousCommands
+            End Get
+            Set(ByVal value As Boolean)
+                _continuousCommands = value
+                If _continuousCommands Then
+                    grammar.CmdSetRuleState("Command", SpeechRuleState.SGDSActive)
+                    monitor.writeLineIf(logGeneral, "Continous commands active.")
+                Else
+                    grammar.CmdSetRuleState("Command", SpeechRuleState.SGDSInactive)
+                    monitor.writeLineIf(logGeneral, "Continous commands disabled.")
+                End If
+            End Set
+        End Property
 
     End Class
 

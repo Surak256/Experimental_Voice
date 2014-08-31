@@ -35,6 +35,8 @@
         mySpeech.addCommand("end program", New x32.CommandHandler(AddressOf EndProgram))
         mySpeech.addCommand("maximize window", New x32.CommandHandler(AddressOf Maximise))
         mySpeech.addCommand("restore window", New x32.CommandHandler(AddressOf Restore))
+        mySpeech.addCommand("enable continuous commands", New x32.CommandHandler(AddressOf ActivateContinuousCommands))
+        mySpeech.addCommand("disable continous commands", New x32.CommandHandler(AddressOf DeactiateContinuousCommands))
     End Sub
 
     Public Sub EndProgram()
@@ -82,5 +84,13 @@
         Else
             MsgBox("Invalid." & vbNewLine & isValid.ToString())
         End If
+    End Sub
+
+    Private Sub ActivateContinuousCommands()
+        mySpeech.ContinuousCommands = True
+    End Sub
+
+    Private Sub DeactiateContinuousCommands()
+        mySpeech.ContinuousCommands = False
     End Sub
 End Class
